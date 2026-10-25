@@ -1,0 +1,190 @@
+Option Explicit
+
+' ---------------- SETTINGS ----------------
+Const INCLUDE_REVISION As Boolean = False        ' True = add revision to the file name
+Const REV_PROP As String = "Revision"            ' part custom property to read the revision from
+Const SEPARATOR As String = "-REV "              ' between file name and revision
+Const OVERWRITE_EXISTING As Boolean = True       ' False = skip STEP files that already exist
+' ------------------------------------------
+
+Dim swApp As SldWorks.SldWorks
+
+Sub main()
+    Dim swModel As SldWorks.ModelDoc2
+    Dim swAssy As SldWorks.AssemblyDoc
+
+    Set swApp = Application.SldWorks
+    Set swModel = swApp.ActiveDoc
+
+    If swModel Is Nothing Then
+        MsgBox "Please open an assembly first.", vbExclamation
+        Exit Sub
+    End If
+
+    If swModel.GetType <> swDocASSEMBLY Then
+        MsgBox "The active document is not an assembly.", vbExclamation
+        Exit Sub
+    End If
+
+    Set swAssy = swModel
+
+    ' ---- Ask for the save location ----
+    Dim saveFolder As String
+    saveFolder = PickFolder("Select the folder to save the STEP files in:")
+    If saveFolder = "" Then Exit Sub
+    If Right(saveFolder, 1) <> "\" Then saveFolder = saveFolder & "\"
+
+    ' ---- Get all components (all levels) ----
+    Dim comps As Variant
+    comps = swAssy.GetComponents(False)
+    If IsEmpty(comps) Then
+        MsgBox "No components found in this assembly.", vbExclamation
+        Exit Sub
+    End If
+
+    Dim seen As New Collection
+    Dim comp As SldWorks.Component2
+    Dim compPath As String, detail As String
+    Dim i As Long, status As Long
+    Dim nOK As Long, nMissing As Long, nFailed As Long, nSkipped As Long
+    Dim logText As String
+
+    For i = 0 To UBound(comps)
+        Set comp = comps(i)
+
+        If Not comp.IsSuppressed Then
+            compPath = comp.GetPathName
+
+            If LCase(Right(compPath, 6)) = "sldprt" Then
+                If Not AlreadySeen(seen, compPath) Then
+                    status = ExportPartAsStep(compPath, saveFolder, detail)
+                    Select Case status
+                        Case 0: nOK = nOK + 1
+                        Case 1: nMissing = nMissing + 1
+                        Case 2: nFailed = nFailed + 1
+                        Case 3: nSkipped = nSkipped + 1
+                    End Select
+                    logText = logText & detail & vbCrLf
+                End If
+            End If
+        End If
+    Next i
+
+    ' Return focus to the assembly
+    Dim actErr As Long
+    swApp.ActivateDoc2 swModel.GetTitle, False, actErr
+
+    ' ---- Write a log file and show a summary ----
+    Dim logPath As String
+    logPath = saveFolder & "STEP_ExportLog.txt"
+    On Error Resume Next
+    Open logPath For Output As #1
+    Print #1, "Assembly: " & swModel.GetPathName
+    Print #1, String(60, "-")
+    Print #1, logText
+    Close #1
+    On Error GoTo 0
+
+    MsgBox "Batch export finished." & vbCrLf & vbCrLf & _
+           "Exported: " & nOK & vbCrLf & _
+           "File not found: " & nMissing & vbCrLf & _
+           "Failed: " & nFailed & vbCrLf & _
+           "Skipped (already exists): " & nSkipped & vbCrLf & vbCrLf & _
+           "Details saved to:" & vbCrLf & logPath, vbInformation
+End Sub
+
+' Saves one part file as STEP.
+' Returns 0 = exported, 1 = file not found, 2 = failed, 3 = skipped.
+Private Function ExportPartAsStep(ByVal partPath As String, ByVal saveFolder As String, _
+                                  ByRef detail As String) As Long
+    If Dir(partPath) = "" Then
+        detail = "NOT FOUND    : " & partPath
+        ExportPartAsStep = 1
+        Exit Function
+    End If
+
+    ' Use the part if it's already open/loaded, otherwise open it quietly
+    Dim swPart As SldWorks.ModelDoc2
+    Dim wasOpen As Boolean, errs As Long, warns As Long
+
+    Set swPart = swApp.GetOpenDocumentByName(partPath)
+    wasOpen = Not (swPart Is Nothing)
+
+    If Not wasOpen Then
+        Set swPart = swApp.OpenDoc6(partPath, swDocPART, _
+                swOpenDocOptions_Silent + swOpenDocOptions_ReadOnly, "", errs, warns)
+    End If
+
+    If swPart Is Nothing Then
+        detail = "FAILED (open, error " & errs & "): " & partPath
+        ExportPartAsStep = 2
+        Exit Function
+    End If
+
+    ' Build the file name
+    Dim fileName As String, stepPath As String
+    fileName = Mid(partPath, InStrRev(partPath, "\") + 1)
+    fileName = Left(fileName, InStrRev(fileName, ".") - 1)
+
+    If INCLUDE_REVISION Then
+        Dim valOut As String, resolved As String, wasResolved As Boolean
+        swPart.Extension.CustomPropertyManager("").Get5 REV_PROP, False, valOut, resolved, wasResolved
+        If Trim(resolved) <> "" Then fileName = fileName & SEPARATOR & Trim(resolved)
+    End If
+
+    stepPath = saveFolder & CleanName(fileName) & ".step"
+
+    If Not OVERWRITE_EXISTING And Dir(stepPath) <> "" Then
+        detail = "SKIPPED      : " & stepPath & " already exists"
+        ExportPartAsStep = 3
+    Else
+        Dim ok As Boolean
+        ok = swPart.Extension.SaveAs3(stepPath, swSaveAsCurrentVersion, _
+                swSaveAsOptions_Silent, Nothing, Nothing, errs, warns)
+        If ok Then
+            detail = "EXPORTED     : " & stepPath
+            ExportPartAsStep = 0
+        Else
+            detail = "FAILED (save, error " & errs & "): " & partPath
+            ExportPartAsStep = 2
+        End If
+    End If
+
+    ' Close it again only if we opened it
+    If Not wasOpen Then swApp.CloseDoc swPart.GetTitle
+End Function
+
+' True if this path was already processed (parts used several times appear once).
+Private Function AlreadySeen(col As Collection, ByVal key As String) As Boolean
+    On Error Resume Next
+    col.Add key, LCase(key)
+    AlreadySeen = (Err.Number <> 0)
+    Err.Clear
+End Function
+
+' Shows a standard Windows folder browser. Returns "" if cancelled.
+Private Function PickFolder(ByVal prompt As String) As String
+    Const BIF_RETURNONLYFSDIRS As Long = &H1
+    Const BIF_NEWDIALOGSTYLE As Long = &H40
+
+    Dim shellApp As Object, folder As Object
+    Set shellApp = CreateObject("Shell.Application")
+    Set folder = shellApp.BrowseForFolder(0, prompt, _
+                    BIF_RETURNONLYFSDIRS Or BIF_NEWDIALOGSTYLE)
+
+    If folder Is Nothing Then
+        PickFolder = ""
+    Else
+        PickFolder = folder.Self.Path
+    End If
+End Function
+
+' Replaces characters Windows doesn't allow in file names.
+Private Function CleanName(ByVal s As String) As String
+    Dim bad As Variant, c As Variant
+    bad = Array("\", "/", ":", "*", "?", """", "<", ">", "|")
+    For Each c In bad
+        s = Replace(s, c, "-")
+    Next
+    CleanName = s
+End Function

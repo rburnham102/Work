@@ -1,0 +1,97 @@
+Option Explicit
+
+' ---------------- SETTINGS ----------------
+Const INCLUDE_REVISION As Boolean = False   ' True = add revision to the file name
+Const REV_PROP As String = "Revision"       ' part custom property to read the revision from
+Const SEPARATOR As String = "-REV "         ' between file name and revision
+' ------------------------------------------
+
+Dim swApp As SldWorks.SldWorks
+Dim swModel As SldWorks.ModelDoc2
+
+Sub main()
+    Set swApp = Application.SldWorks
+    Set swModel = swApp.ActiveDoc
+
+    If swModel Is Nothing Then
+        MsgBox "Please open a part first.", vbExclamation
+        Exit Sub
+    End If
+
+    If swModel.GetType <> swDocPART And swModel.GetType <> swDocASSEMBLY Then
+        MsgBox "The active document must be a part or assembly.", vbExclamation
+        Exit Sub
+    End If
+
+    ' ---- Base file name (no path, no extension) ----
+    Dim fullPath As String
+    fullPath = swModel.GetPathName
+    If fullPath = "" Then
+        MsgBox "Please save the file before exporting.", vbExclamation
+        Exit Sub
+    End If
+
+    Dim fileName As String
+    fileName = Mid(fullPath, InStrRev(fullPath, "\") + 1)
+    fileName = Left(fileName, InStrRev(fileName, ".") - 1)
+
+    ' ---- Optional revision ----
+    If INCLUDE_REVISION Then
+        Dim valOut As String, resolved As String, wasResolved As Boolean
+        swModel.Extension.CustomPropertyManager("").Get5 REV_PROP, False, valOut, resolved, wasResolved
+        If Trim(resolved) <> "" Then fileName = fileName & SEPARATOR & Trim(resolved)
+    End If
+
+    ' ---- Ask the user for a save location ----
+    Dim saveFolder As String
+    saveFolder = PickFolder("Select the folder to save the STEP file in:")
+    If saveFolder = "" Then Exit Sub
+    If Right(saveFolder, 1) <> "\" Then saveFolder = saveFolder & "\"
+
+    Dim stepPath As String
+    stepPath = saveFolder & CleanName(fileName) & ".step"
+
+    ' ---- Warn before overwriting ----
+    If Dir(stepPath) <> "" Then
+        If MsgBox(stepPath & vbCrLf & vbCrLf & "already exists. Overwrite?", _
+                  vbYesNo + vbQuestion, "File exists") = vbNo Then Exit Sub
+    End If
+
+    ' ---- Save as STEP ----
+    Dim errs As Long, warns As Long, ok As Boolean
+    ok = swModel.Extension.SaveAs3(stepPath, swSaveAsCurrentVersion, _
+            swSaveAsOptions_Silent, Nothing, Nothing, errs, warns)
+
+    If ok Then
+        MsgBox "Saved:" & vbCrLf & stepPath, vbInformation
+    Else
+        MsgBox "Export failed. Error code: " & errs & ", warning code: " & warns, vbCritical
+    End If
+End Sub
+
+' Shows a standard Windows folder browser. Returns "" if cancelled.
+Private Function PickFolder(ByVal prompt As String) As String
+    Const BIF_RETURNONLYFSDIRS As Long = &H1
+    Const BIF_NEWDIALOGSTYLE As Long = &H40
+
+    Dim shellApp As Object, folder As Object
+    Set shellApp = CreateObject("Shell.Application")
+    Set folder = shellApp.BrowseForFolder(0, prompt, _
+                    BIF_RETURNONLYFSDIRS Or BIF_NEWDIALOGSTYLE)
+
+    If folder Is Nothing Then
+        PickFolder = ""
+    Else
+        PickFolder = folder.Self.Path
+    End If
+End Function
+
+' Replaces characters Windows doesn't allow in file names.
+Private Function CleanName(ByVal s As String) As String
+    Dim bad As Variant, c As Variant
+    bad = Array("\", "/", ":", "*", "?", """", "<", ">", "|")
+    For Each c In bad
+        s = Replace(s, c, "-")
+    Next
+    CleanName = s
+End Function

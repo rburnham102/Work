@@ -1,0 +1,218 @@
+Option Explicit
+
+' ---------------- SETTINGS ----------------
+Const REV_PROP As String = "Revision"       ' drawing custom property to read the revision from
+Const SEPARATOR As String = "-REV "             ' between file name and revision
+Const NO_REV_TEXT As String = "NoRev"       ' used in the file name if no revision is found
+Const INCLUDE_SUBASSEMBLIES As Boolean = False   ' True = also export drawings of sub-assemblies
+Const OVERWRITE_EXISTING As Boolean = True       ' False = skip PDFs that already exist
+' ------------------------------------------
+
+Dim swApp As SldWorks.SldWorks
+
+Sub main()
+    Dim swModel As SldWorks.ModelDoc2
+    Dim swAssy As SldWorks.AssemblyDoc
+
+    Set swApp = Application.SldWorks
+    Set swModel = swApp.ActiveDoc
+
+    If swModel Is Nothing Then
+        MsgBox "Please open an assembly first.", vbExclamation
+        Exit Sub
+    End If
+
+    If swModel.GetType <> swDocASSEMBLY Then
+        MsgBox "The active document is not an assembly.", vbExclamation
+        Exit Sub
+    End If
+
+    Set swAssy = swModel
+
+    ' ---- Ask for the save location ----
+    Dim saveFolder As String
+    saveFolder = PickFolder("Select the folder to save the PDFs in:")
+    If saveFolder = "" Then Exit Sub
+    If Right(saveFolder, 1) <> "\" Then saveFolder = saveFolder & "\"
+
+    ' ---- Get all components (all levels) ----
+    Dim comps As Variant
+    comps = swAssy.GetComponents(False)
+    If IsEmpty(comps) Then
+        MsgBox "No components found in this assembly.", vbExclamation
+        Exit Sub
+    End If
+
+    Dim seen As New Collection
+    Dim comp As SldWorks.Component2
+    Dim compPath As String, ext As String, detail As String
+    Dim i As Long, status As Long
+    Dim nOK As Long, nMissing As Long, nFailed As Long, nSkipped As Long
+    Dim logText As String
+
+    For i = 0 To UBound(comps)
+        Set comp = comps(i)
+
+        If Not comp.IsSuppressed Then
+            compPath = comp.GetPathName
+            ext = LCase(Right(compPath, 6))
+
+            If ext = "sldprt" Or (INCLUDE_SUBASSEMBLIES And ext = "sldasm") Then
+                If Not AlreadySeen(seen, compPath) Then
+                    status = ExportDrawingFor(compPath, saveFolder, detail)
+                    Select Case status
+                        Case 0: nOK = nOK + 1
+                        Case 1: nMissing = nMissing + 1
+                        Case 2: nFailed = nFailed + 1
+                        Case 3: nSkipped = nSkipped + 1
+                    End Select
+                    logText = logText & detail & vbCrLf
+                End If
+            End If
+        End If
+    Next i
+
+    ' Return focus to the assembly
+    Dim actErr As Long
+    swApp.ActivateDoc2 swModel.GetTitle, False, actErr
+
+    ' ---- Write a log file and show a summary ----
+    Dim logPath As String
+    logPath = saveFolder & "ExportLog.txt"
+    On Error Resume Next
+    Open logPath For Output As #1
+    Print #1, "Assembly: " & swModel.GetPathName
+    Print #1, String(60, "-")
+    Print #1, logText
+    Close #1
+    On Error GoTo 0
+
+    MsgBox "Batch export finished." & vbCrLf & vbCrLf & _
+           "Exported: " & nOK & vbCrLf & _
+           "No drawing found: " & nMissing & vbCrLf & _
+           "Failed: " & nFailed & vbCrLf & _
+           "Skipped (already exists): " & nSkipped & vbCrLf & vbCrLf & _
+           "Details saved to:" & vbCrLf & logPath, vbInformation
+End Sub
+
+' Exports the drawing that matches the part/assembly (same folder, same name).
+' Returns 0 = exported, 1 = no drawing found, 2 = failed, 3 = skipped.
+Private Function ExportDrawingFor(ByVal compPath As String, ByVal saveFolder As String, _
+                                  ByRef detail As String) As Long
+    Dim drwPath As String
+    drwPath = Left(compPath, InStrRev(compPath, ".")) & "slddrw"
+
+    If Dir(drwPath) = "" Then
+        detail = "NO DRAWING   : " & compPath
+        ExportDrawingFor = 1
+        Exit Function
+    End If
+
+    ' Open the drawing (or use it if it's already open)
+    Dim swDrw As SldWorks.ModelDoc2
+    Dim wasOpen As Boolean, errs As Long, warns As Long
+
+    Set swDrw = swApp.GetOpenDocumentByName(drwPath)
+    wasOpen = Not (swDrw Is Nothing)
+
+    If Not wasOpen Then
+        Set swDrw = swApp.OpenDoc6(drwPath, swDocDRAWING, _
+                swOpenDocOptions_Silent + swOpenDocOptions_ReadOnly, "", errs, warns)
+    End If
+
+    If swDrw Is Nothing Then
+        detail = "FAILED (open, error " & errs & "): " & drwPath
+        ExportDrawingFor = 2
+        Exit Function
+    End If
+
+    ' Build the PDF name: drawing file name + revision
+    Dim baseName As String, rev As String, pdfPath As String
+    baseName = Mid(drwPath, InStrRev(drwPath, "\") + 1)
+    baseName = Left(baseName, InStrRev(baseName, ".") - 1)
+
+    rev = GetRevision(swDrw)
+    If rev = "" Then rev = NO_REV_TEXT
+
+    pdfPath = saveFolder & CleanName(baseName & SEPARATOR & rev) & ".pdf"
+
+    If Not OVERWRITE_EXISTING And Dir(pdfPath) <> "" Then
+        detail = "SKIPPED      : " & pdfPath & " already exists"
+        ExportDrawingFor = 3
+    Else
+        Dim ok As Boolean
+        ok = swDrw.Extension.SaveAs3(pdfPath, swSaveAsCurrentVersion, _
+                swSaveAsOptions_Silent, Nothing, Nothing, errs, warns)
+        If ok Then
+            detail = "EXPORTED     : " & pdfPath
+            ExportDrawingFor = 0
+        Else
+            detail = "FAILED (save, error " & errs & "): " & drwPath
+            ExportDrawingFor = 2
+        End If
+    End If
+
+    ' Close it again only if we opened it
+    If Not wasOpen Then swApp.CloseDoc swDrw.GetTitle
+End Function
+
+' True if this path was already processed (parts used several times appear once).
+Private Function AlreadySeen(col As Collection, ByVal key As String) As Boolean
+    On Error Resume Next
+    col.Add key, LCase(key)
+    AlreadySeen = (Err.Number <> 0)
+    Err.Clear
+End Function
+
+' Shows a standard Windows folder browser. Returns "" if cancelled.
+Private Function PickFolder(ByVal prompt As String) As String
+    Const BIF_RETURNONLYFSDIRS As Long = &H1
+    Const BIF_NEWDIALOGSTYLE As Long = &H40
+
+    Dim shellApp As Object, folder As Object
+    Set shellApp = CreateObject("Shell.Application")
+    Set folder = shellApp.BrowseForFolder(0, prompt, _
+                    BIF_RETURNONLYFSDIRS Or BIF_NEWDIALOGSTYLE)
+
+    If folder Is Nothing Then
+        PickFolder = ""
+    Else
+        PickFolder = folder.Self.Path
+    End If
+End Function
+
+' Revision from (1) the drawing's custom property, then (2) the revision table.
+Private Function GetRevision(swDrwModel As SldWorks.ModelDoc2) As String
+    Dim valOut As String, resolved As String, wasResolved As Boolean
+    Dim propMgr As SldWorks.CustomPropertyManager
+
+    Set propMgr = swDrwModel.Extension.CustomPropertyManager("")
+    propMgr.Get5 REV_PROP, False, valOut, resolved, wasResolved
+
+    If Trim(resolved) <> "" Then
+        GetRevision = Trim(resolved)
+        Exit Function
+    End If
+
+    Dim swDraw As SldWorks.DrawingDoc
+    Dim swSheet As SldWorks.Sheet
+    Dim swRevTable As SldWorks.RevisionTableAnnotation
+
+    Set swDraw = swDrwModel
+    Set swSheet = swDraw.GetCurrentSheet
+    Set swRevTable = swSheet.RevisionTable
+
+    If Not swRevTable Is Nothing Then
+        GetRevision = Trim(swRevTable.CurrentRevision)
+    End If
+End Function
+
+' Replaces characters Windows doesn't allow in file names.
+Private Function CleanName(ByVal s As String) As String
+    Dim bad As Variant, c As Variant
+    bad = Array("\", "/", ":", "*", "?", """", "<", ">", "|")
+    For Each c In bad
+        s = Replace(s, c, "-")
+    Next
+    CleanName = s
+End Function

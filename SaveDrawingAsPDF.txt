@@ -1,0 +1,126 @@
+Option Explicit
+
+' ---------------- SETTINGS ----------------
+Const REV_PROP As String = "Revision"              ' custom property name to look for
+Const SEPARATOR As String = "-REV "                    ' between file name and revision
+' ------------------------------------------
+
+Dim swApp As SldWorks.SldWorks
+Dim swModel As SldWorks.ModelDoc2
+Dim swDraw As SldWorks.DrawingDoc
+
+Sub main()
+    Set swApp = Application.SldWorks
+    Set swModel = swApp.ActiveDoc
+
+    If swModel Is Nothing Then
+        MsgBox "Please open a drawing first.", vbExclamation
+        Exit Sub
+    End If
+
+    If swModel.GetType <> swDocDRAWING Then
+        MsgBox "The active document is not a drawing.", vbExclamation
+        Exit Sub
+    End If
+
+    Set swDraw = swModel
+
+    ' ---- Base file name (no path, no extension) ----
+    Dim fullPath As String
+    fullPath = swModel.GetPathName
+    If fullPath = "" Then
+        MsgBox "Please save the drawing before exporting.", vbExclamation
+        Exit Sub
+    End If
+
+    Dim baseName As String
+    baseName = Mid(fullPath, InStrRev(fullPath, "\") + 1)
+    baseName = Left(baseName, InStrRev(baseName, ".") - 1)
+
+    ' ---- Revision ----
+    Dim rev As String
+    rev = GetRevision()
+
+    If rev = "" Then
+        rev = InputBox("No revision found. Enter revision:", "Revision")
+        If rev = "" Then Exit Sub
+    End If
+
+    ' ---- Ask the user for a save location ----
+    Dim saveFolder As String
+    saveFolder = PickFolder("Select the folder to save the PDF in:")
+    If saveFolder = "" Then Exit Sub   ' user cancelled
+
+    If Right(saveFolder, 1) <> "\" Then saveFolder = saveFolder & "\"
+
+    Dim pdfPath As String
+    pdfPath = saveFolder & CleanName(baseName & SEPARATOR & rev) & ".pdf"
+
+    ' ---- Warn before overwriting ----
+    If Dir(pdfPath) <> "" Then
+        If MsgBox(pdfPath & vbCrLf & vbCrLf & "already exists. Overwrite?", _
+                  vbYesNo + vbQuestion, "File exists") = vbNo Then Exit Sub
+    End If
+
+    ' ---- Save as PDF ----
+    Dim errs As Long, warns As Long, ok As Boolean
+    ok = swModel.Extension.SaveAs3(pdfPath, swSaveAsCurrentVersion, _
+            swSaveAsOptions_Silent, Nothing, Nothing, errs, warns)
+
+    If ok Then
+        MsgBox "Saved:" & vbCrLf & pdfPath, vbInformation
+    Else
+        MsgBox "Export failed. Error code: " & errs & ", warning code: " & warns, vbCritical
+    End If
+End Sub
+
+' Shows a standard Windows folder browser. Returns "" if cancelled.
+Private Function PickFolder(ByVal prompt As String) As String
+    Const BIF_RETURNONLYFSDIRS As Long = &H1
+    Const BIF_NEWDIALOGSTYLE As Long = &H40      ' adds "Make New Folder" button
+
+    Dim shellApp As Object, folder As Object
+    Set shellApp = CreateObject("Shell.Application")
+    Set folder = shellApp.BrowseForFolder(0, prompt, _
+                    BIF_RETURNONLYFSDIRS Or BIF_NEWDIALOGSTYLE)
+
+    If folder Is Nothing Then
+        PickFolder = ""
+    Else
+        PickFolder = folder.Self.Path
+    End If
+End Function
+
+' Looks for the revision in (1) the drawing's custom property, then
+' (2) the current revision in the sheet's revision table.
+Private Function GetRevision() As String
+    Dim valOut As String, resolved As String, wasResolved As Boolean
+    Dim propMgr As SldWorks.CustomPropertyManager
+
+    Set propMgr = swModel.Extension.CustomPropertyManager("")
+    propMgr.Get5 REV_PROP, False, valOut, resolved, wasResolved
+
+    If Trim(resolved) <> "" Then
+        GetRevision = Trim(resolved)
+        Exit Function
+    End If
+
+    Dim swSheet As SldWorks.Sheet
+    Dim swRevTable As SldWorks.RevisionTableAnnotation
+    Set swSheet = swDraw.GetCurrentSheet
+    Set swRevTable = swSheet.RevisionTable
+
+    If Not swRevTable Is Nothing Then
+        GetRevision = Trim(swRevTable.CurrentRevision)
+    End If
+End Function
+
+' Removes characters Windows doesn't allow in file names.
+Private Function CleanName(ByVal s As String) As String
+    Dim bad As Variant, c As Variant
+    bad = Array("\", "/", ":", "*", "?", """", "<", ">", "|")
+    For Each c In bad
+        s = Replace(s, c, "-")
+    Next
+    CleanName = s
+End Function
