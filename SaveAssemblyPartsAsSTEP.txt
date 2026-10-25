@@ -47,12 +47,20 @@ Sub main()
     Dim compPath As String, detail As String
     Dim i As Long, status As Long
     Dim nOK As Long, nMissing As Long, nFailed As Long, nSkipped As Long
+    Dim nExcluded As Long
     Dim logText As String
 
     For i = 0 To UBound(comps)
         Set comp = comps(i)
 
-        If Not comp.IsSuppressed Then
+        If IsExcluded(comp) Then
+            ' Hidden or suppressed (itself or via a parent subassembly)
+            If LCase(Right(comp.GetPathName, 6)) = "sldprt" Then
+                nExcluded = nExcluded + 1
+                logText = logText & "EXCLUDED     : " & comp.Name2 & _
+                          " (hidden or suppressed)" & vbCrLf
+            End If
+        Else
             compPath = comp.GetPathName
 
             If LCase(Right(compPath, 6)) = "sldprt" Then
@@ -89,7 +97,8 @@ Sub main()
            "Exported: " & nOK & vbCrLf & _
            "File not found: " & nMissing & vbCrLf & _
            "Failed: " & nFailed & vbCrLf & _
-           "Skipped (already exists): " & nSkipped & vbCrLf & vbCrLf & _
+           "Skipped (already exists): " & nSkipped & vbCrLf & _
+           "Excluded (hidden/suppressed instances): " & nExcluded & vbCrLf & vbCrLf & _
            "Details saved to:" & vbCrLf & logPath, vbInformation
 End Sub
 
@@ -152,6 +161,25 @@ Private Function ExportPartAsStep(ByVal partPath As String, ByVal saveFolder As 
 
     ' Close it again only if we opened it
     If Not wasOpen Then swApp.CloseDoc swPart.GetTitle
+End Function
+
+' True if the component, or any parent subassembly above it,
+' is suppressed or hidden (in the active display state).
+Private Function IsExcluded(ByVal comp As SldWorks.Component2) As Boolean
+    Dim c As SldWorks.Component2
+    Set c = comp
+    Do While Not c Is Nothing
+        If c.IsSuppressed Then
+            IsExcluded = True
+            Exit Function
+        End If
+        If c.Visible = swComponentHidden Then
+            IsExcluded = True
+            Exit Function
+        End If
+        Set c = c.GetParent
+    Loop
+    IsExcluded = False
 End Function
 
 ' True if this path was already processed (parts used several times appear once).
