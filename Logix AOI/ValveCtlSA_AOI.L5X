@@ -1,0 +1,802 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RSLogix5000Content SchemaRevision="1.0" SoftwareRevision="35.00" TargetName="ValveCtlSA" TargetType="AddOnInstructionDefinition" TargetRevision="1.0 " TargetLastEdited="2026-11-03T12:00:00.000Z" ContainsContext="true" ExportDate="Tue Nov 03 12:00:00 2026" ExportOptions="References NoRawData L5KData DecoratedData Context Dependencies ForceProtectedEncoding">
+<Controller Use="Context" Name="AOI_Export">
+<DataTypes Use="Context">
+</DataTypes>
+<AddOnInstructionDefinitions Use="Context">
+<AddOnInstructionDefinition Use="Target" Name="ValveCtlSA" Revision="1.0" ExecutePrescan="false" ExecutePostscan="false" ExecuteEnableInFalse="false" CreatedDate="2026-11-03T12:00:00.000Z" CreatedBy="Claude" EditedDate="2026-11-03T12:00:00.000Z" EditedBy="Claude" SoftwareRevision="v35.00">
+<Description>
+<![CDATA[Single-acting spring-return valve control (variant of ValveCtl) with open/closed prox feedback, travel watchdogs, stroke times, and closed-angle deviation check. All alarms via ALMD.]]>
+</Description>
+<Parameters>
+<Parameter Name="EnableIn" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Enable Input - System Defined Parameter]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[1]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="1"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="EnableOut" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Enable Output - System Defined Parameter]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Cmd_Open" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Open request - hold on to open. Off = solenoid off, spring closes the valve]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Inp_ProgReset" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Program reset for latched alarms (wire to reset pushbutton or HMI bit)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Inp_OpenedPrx" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Valve open position prox / limit switch]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Inp_ClosedPrx" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Valve closed position prox / limit switch]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Inp_Angle" TagType="Base" DataType="REAL" Usage="Input" Radix="Float" Required="true" Visible="true" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Valve angle feedback (scaled engineering units, e.g. degrees)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Cfg_OpenTime" TagType="Base" DataType="DINT" Usage="Input" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Open watchdog time (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[5000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="5000"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Cfg_CloseTime" TagType="Base" DataType="DINT" Usage="Input" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Close watchdog time (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[5000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="5000"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Cfg_ClosedAngle" TagType="Base" DataType="REAL" Usage="Input" Radix="Float" Required="false" Visible="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Expected closed angle - set at installation]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Cfg_AngleDev" TagType="Base" DataType="REAL" Usage="Input" Radix="Float" Required="false" Visible="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Allowed deviation (+/-) from Cfg_ClosedAngle. Enter as a positive number.]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[2.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="2.0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Cfg_AngleDelay" TagType="Base" DataType="DINT" Usage="Input" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Time valve must be closed before the angle is checked (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[60000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="60000"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Out_OpenSol" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Open solenoid output (single-acting, spring return closed)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_Opened" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Valve confirmed open]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_Closed" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Valve confirmed closed]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_Opening" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Open solenoid on, not yet at open prox]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_Closing" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Open solenoid off (spring closing), not yet at closed prox]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_OpenFault" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Failed to reach open prox within watchdog time (clears when request drops or prox is made)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_CloseFault" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Failed to reach closed prox within watchdog time (clears when request drops or prox is made)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_ProxFault" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Both proxes on at the same time]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_AngleFault" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Closed angle outside Cfg_ClosedAngle +/- Cfg_AngleDev]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_AngleHigh" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Closed angle above Cfg_ClosedAngle + Cfg_AngleDev]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_AngleLow" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Closed angle below Cfg_ClosedAngle - Cfg_AngleDev]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_AngleDeviation" TagType="Base" DataType="REAL" Usage="Output" Radix="Float" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Inp_Angle minus Cfg_ClosedAngle (live)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_OpenLast" TagType="Base" DataType="DINT" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Last open time (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_OpenAvg" TagType="Base" DataType="REAL" Usage="Output" Radix="Float" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Average of last 5 open times (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_CloseLast" TagType="Base" DataType="DINT" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Last close time (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_CloseAvg" TagType="Base" DataType="REAL" Usage="Output" Radix="Float" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Average of last 5 close times (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Alm_OpenFail" TagType="Base" DataType="ALARM_DIGITAL" Usage="InOut" Required="true" Visible="true" Constant="false">
+<Description>
+<![CDATA[Digital alarm - valve failed to open]]>
+</Description>
+</Parameter>
+<Parameter Name="Alm_CloseFail" TagType="Base" DataType="ALARM_DIGITAL" Usage="InOut" Required="true" Visible="true" Constant="false">
+<Description>
+<![CDATA[Digital alarm - valve failed to close]]>
+</Description>
+</Parameter>
+<Parameter Name="Alm_AngleDev" TagType="Base" DataType="ALARM_DIGITAL" Usage="InOut" Required="true" Visible="true" Constant="false">
+<Description>
+<![CDATA[Digital alarm - closed angle outside allowed deviation]]>
+</Description>
+</Parameter>
+</Parameters>
+<LocalTags>
+<LocalTag Name="OpenWD" DataType="TIMER" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Open watchdog timer]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,5000,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="5000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="CloseWD" DataType="TIMER" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Close watchdog timer]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,5000,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="5000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="AngleDelayTmr" DataType="TIMER" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Closed-time delay before angle check]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,60000,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="60000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="AngleHiLimit" DataType="REAL" Radix="Float" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Cfg_ClosedAngle + Cfg_AngleDev]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="AngleLoLimit" DataType="REAL" Radix="Float" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Cfg_ClosedAngle - Cfg_AngleDev]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="OpenTimes" DataType="DINT" Dimensions="5" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Last 5 open times (ms), [0] = newest]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,0,0,0,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Array DataType="DINT" Dimensions="5" Radix="Decimal">
+<Element Index="[0]" Value="0"/>
+<Element Index="[1]" Value="0"/>
+<Element Index="[2]" Value="0"/>
+<Element Index="[3]" Value="0"/>
+<Element Index="[4]" Value="0"/>
+</Array>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="OpenCount" DataType="DINT" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Number of open times recorded (0-5)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="OpenStroke" DataType="TIMER" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Retentive timer measuring open stroke time]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,600000,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="600000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="OpenLogged" DataType="BOOL" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Time for this open has been recorded]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="OpenSum" DataType="REAL" Radix="Float" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Sum of recorded open times (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="CloseTimes" DataType="DINT" Dimensions="5" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Last 5 close times (ms), [0] = newest]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,0,0,0,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Array DataType="DINT" Dimensions="5" Radix="Decimal">
+<Element Index="[0]" Value="0"/>
+<Element Index="[1]" Value="0"/>
+<Element Index="[2]" Value="0"/>
+<Element Index="[3]" Value="0"/>
+<Element Index="[4]" Value="0"/>
+</Array>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="CloseCount" DataType="DINT" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Number of close times recorded (0-5)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="CloseStroke" DataType="TIMER" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Retentive timer measuring close stroke time]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,600000,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="600000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="CloseLogged" DataType="BOOL" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Time for this close has been recorded]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="CloseSum" DataType="REAL" Radix="Float" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Sum of recorded close times (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</LocalTag>
+</LocalTags>
+<Routines>
+<Routine Name="Logic" Type="RLL">
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment>
+<![CDATA[Open watchdog preset from Cfg_OpenTime (ms). Only loaded if > 0, otherwise the 5000 ms default is kept.]]>
+</Comment>
+<Text>
+<![CDATA[GRT(Cfg_OpenTime,0)MOV(Cfg_OpenTime,OpenWD.PRE);]]>
+</Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment>
+<![CDATA[Close watchdog preset from Cfg_CloseTime (ms). Only loaded if > 0, otherwise the 5000 ms default is kept.]]>
+</Comment>
+<Text>
+<![CDATA[GRT(Cfg_CloseTime,0)MOV(Cfg_CloseTime,CloseWD.PRE);]]>
+</Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment>
+<![CDATA[Open solenoid - on only while Cmd_Open is held. When off, the spring closes the valve.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Cmd_Open)OTE(Out_OpenSol);]]>
+</Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment>
+<![CDATA[Confirmed open: open prox on, closed prox off.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Inp_OpenedPrx)XIO(Inp_ClosedPrx)OTE(Sts_Opened);]]>
+</Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment>
+<![CDATA[Confirmed closed: closed prox on, open prox off.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Inp_ClosedPrx)XIO(Inp_OpenedPrx)OTE(Sts_Closed);]]>
+</Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment>
+<![CDATA[Prox fault: both proxes on at the same time.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Inp_OpenedPrx)XIC(Inp_ClosedPrx)OTE(Sts_ProxFault);]]>
+</Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Comment>
+<![CDATA[Opening: open solenoid on and not yet confirmed open.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Out_OpenSol)XIO(Sts_Opened)OTE(Sts_Opening);]]>
+</Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Comment>
+<![CDATA[Closing: open solenoid off (spring closing) and not yet confirmed closed.]]>
+</Comment>
+<Text>
+<![CDATA[XIO(Out_OpenSol)XIO(Sts_Closed)OTE(Sts_Closing);]]>
+</Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Comment>
+<![CDATA[Open watchdog: times while opening, resets when open prox is made or the request drops.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_Opening)TON(OpenWD,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Comment>
+<![CDATA[Close watchdog: times while spring closing, resets when closed prox is made or the open request comes back on.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_Closing)TON(CloseWD,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Comment>
+<![CDATA[Open fault: watchdog timed out.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(OpenWD.DN)OTE(Sts_OpenFault);]]>
+</Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Comment>
+<![CDATA[Close fault: watchdog timed out.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(CloseWD.DN)OTE(Sts_CloseFault);]]>
+</Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Comment>
+<![CDATA[Digital alarm - failed to open. Alarm tag must be configured as Latched; Inp_ProgReset clears it once the fault is gone.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_OpenFault)ALMD(Alm_OpenFail,0,Inp_ProgReset,0,0);]]>
+</Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Comment>
+<![CDATA[Digital alarm - failed to close. Alarm tag must be configured as Latched; Inp_ProgReset clears it once the fault is gone.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_CloseFault)ALMD(Alm_CloseFail,0,Inp_ProgReset,0,0);]]>
+</Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment>
+<![CDATA[OPEN STROKE TIME: Reset the stroke timer whenever the open solenoid is off, ready for the next open.]]>
+</Comment>
+<Text>
+<![CDATA[XIO(Out_OpenSol)RES(OpenStroke);]]>
+</Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Comment>
+<![CDATA[Stroke timer accumulates while opening. Being an RTO, it holds its value once the opened prox is made.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_Opening)RTO(OpenStroke,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Comment>
+<![CDATA[Record the open time once per move (OpenLogged is from the previous scan, so this rung is true for one scan). Shift the array down (oldest in [4] dropped), store newest in [0], output it as Sts_OpenLast, and count samples up to 5.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Out_OpenSol)XIC(Sts_Opened)XIO(OpenLogged)GRT(OpenStroke.ACC,0)[MOV(OpenTimes[3],OpenTimes[4])MOV(OpenTimes[2],OpenTimes[3])MOV(OpenTimes[1],OpenTimes[2])MOV(OpenTimes[0],OpenTimes[1])MOV(OpenStroke.ACC,OpenTimes[0])MOV(OpenStroke.ACC,Sts_OpenLast) ,LES(OpenCount,5)ADD(OpenCount,1,OpenCount) ];]]>
+</Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Comment>
+<![CDATA[Seal-in: OpenLogged turns on once opened and stays on while the open solenoid is on, so each move is recorded only once.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Out_OpenSol)[XIC(Sts_Opened) ,XIC(OpenLogged) ]OTE(OpenLogged);]]>
+</Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Comment>
+<![CDATA[Average open time (ms) = sum of the array / number of samples recorded.]]>
+</Comment>
+<Text>
+<![CDATA[GRT(OpenCount,0)ADD(OpenTimes[0],OpenTimes[1],OpenSum)ADD(OpenSum,OpenTimes[2],OpenSum)ADD(OpenSum,OpenTimes[3],OpenSum)ADD(OpenSum,OpenTimes[4],OpenSum)DIV(OpenSum,OpenCount,Sts_OpenAvg);]]>
+</Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment>
+<![CDATA[CLOSE STROKE TIME: Reset the stroke timer whenever the open solenoid is on, ready for the next close.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Out_OpenSol)RES(CloseStroke);]]>
+</Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Comment>
+<![CDATA[Stroke timer accumulates while closing. Being an RTO, it holds its value once the closed prox is made.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_Closing)RTO(CloseStroke,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment>
+<![CDATA[Record the close time once per move (CloseLogged is from the previous scan, so this rung is true for one scan). Shift the array down (oldest in [4] dropped), store newest in [0], output it as Sts_CloseLast, and count samples up to 5.]]>
+</Comment>
+<Text>
+<![CDATA[XIO(Out_OpenSol)XIC(Sts_Closed)XIO(CloseLogged)GRT(CloseStroke.ACC,0)[MOV(CloseTimes[3],CloseTimes[4])MOV(CloseTimes[2],CloseTimes[3])MOV(CloseTimes[1],CloseTimes[2])MOV(CloseTimes[0],CloseTimes[1])MOV(CloseStroke.ACC,CloseTimes[0])MOV(CloseStroke.ACC,Sts_CloseLast) ,LES(CloseCount,5)ADD(CloseCount,1,CloseCount) ];]]>
+</Text>
+</Rung>
+<Rung Number="22" Type="N">
+<Comment>
+<![CDATA[Seal-in: CloseLogged turns on once closed and stays on while the open solenoid is off, so each move is recorded only once.]]>
+</Comment>
+<Text>
+<![CDATA[XIO(Out_OpenSol)[XIC(Sts_Closed) ,XIC(CloseLogged) ]OTE(CloseLogged);]]>
+</Text>
+</Rung>
+<Rung Number="23" Type="N">
+<Comment>
+<![CDATA[Average close time (ms) = sum of the array / number of samples recorded.]]>
+</Comment>
+<Text>
+<![CDATA[GRT(CloseCount,0)ADD(CloseTimes[0],CloseTimes[1],CloseSum)ADD(CloseSum,CloseTimes[2],CloseSum)ADD(CloseSum,CloseTimes[3],CloseSum)ADD(CloseSum,CloseTimes[4],CloseSum)DIV(CloseSum,CloseCount,Sts_CloseAvg);]]>
+</Text>
+</Rung>
+<Rung Number="24" Type="N">
+<Comment>
+<![CDATA[ANGLE CHECK: Delay preset from Cfg_AngleDelay (ms). Only loaded if > 0, otherwise the 60000 ms default is kept.]]>
+</Comment>
+<Text>
+<![CDATA[GRT(Cfg_AngleDelay,0)MOV(Cfg_AngleDelay,AngleDelayTmr.PRE);]]>
+</Text>
+</Rung>
+<Rung Number="25" Type="N">
+<Comment>
+<![CDATA[Live deviation from the installed closed angle, and the high/low limits (closed angle +/- allowed deviation).]]>
+</Comment>
+<Text>
+<![CDATA[SUB(Inp_Angle,Cfg_ClosedAngle,Sts_AngleDeviation)ADD(Cfg_ClosedAngle,Cfg_AngleDev,AngleHiLimit)SUB(Cfg_ClosedAngle,Cfg_AngleDev,AngleLoLimit);]]>
+</Text>
+</Rung>
+<Rung Number="26" Type="N">
+<Comment>
+<![CDATA[Delay timer runs while the valve is confirmed closed. Resets as soon as it leaves the closed position.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_Closed)TON(AngleDelayTmr,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="27" Type="N">
+<Comment>
+<![CDATA[Angle high: closed for the delay time and angle is above the high limit.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(AngleDelayTmr.DN)GRT(Inp_Angle,AngleHiLimit)OTE(Sts_AngleHigh);]]>
+</Text>
+</Rung>
+<Rung Number="28" Type="N">
+<Comment>
+<![CDATA[Angle low: closed for the delay time and angle is below the low limit.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(AngleDelayTmr.DN)LES(Inp_Angle,AngleLoLimit)OTE(Sts_AngleLow);]]>
+</Text>
+</Rung>
+<Rung Number="29" Type="N">
+<Comment>
+<![CDATA[Angle fault: either high or low.]]>
+</Comment>
+<Text>
+<![CDATA[[XIC(Sts_AngleHigh) ,XIC(Sts_AngleLow) ]OTE(Sts_AngleFault);]]>
+</Text>
+</Rung>
+<Rung Number="30" Type="N">
+<Comment>
+<![CDATA[Digital alarm - closed angle out of tolerance. Alarm tag must be configured as Latched; Inp_ProgReset clears it once the fault is gone.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_AngleFault)ALMD(Alm_AngleDev,0,Inp_ProgReset,0,0);]]>
+</Text>
+</Rung>
+</RLLContent>
+</Routine>
+</Routines>
+</AddOnInstructionDefinition>
+</AddOnInstructionDefinitions>
+</Controller>
+</RSLogix5000Content>

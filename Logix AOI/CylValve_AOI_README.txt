@@ -4,7 +4,8 @@ Revision 1.5  |  Studio 5000 Logix Designer v35  |  Ladder logic only
 
 PURPOSE
 -------
-Controls an air cylinder through a single or double solenoid valve.
+Controls a double-acting air cylinder through a double-solenoid valve.
+(For single-acting / spring-return cylinders, use CylValveSA.)
 Confirms position with two proxes, runs a watchdog timer on each move,
 raises digital alarms on timeout, and records stroke times.
 
@@ -46,13 +47,11 @@ OUTPUT PARAMETERS
 -----------------
 Out_ExtendSol     BOOL  Required
     Extend solenoid output. On while Cmd_Extend is held (and Cmd_Retract
-    is off). For a single-solenoid spring-return valve, this is the only
-    output used.
+    is off).
 
 Out_RetractSol    BOOL  Required
-    Retract solenoid output for double-solenoid valves. On while
-    Cmd_Retract is held (and Cmd_Extend is off). On a single-solenoid
-    valve, assign it to an unused/spare BOOL tag.
+    Retract solenoid output. On while Cmd_Retract is held (and Cmd_Extend
+    is off).
 
 Sts_Extended      BOOL  Visible
     Extended prox on AND retracted prox off.
@@ -128,7 +127,7 @@ NOTES
 -----
 - No latch/unlatch instructions and no one-shots are used. One-time
   recording of each move is done with a seal-in rung.
-- Retract times are only recorded while Cmd_Retract is held. On a
-  single-solenoid valve, a spring return from dropping Cmd_Extend is not
-  timed.
+- Moves are only monitored and timed while their command is held. With
+  neither command on, both solenoids are off and the valve holds its
+  last position unmonitored.
 - Times are accurate to the scan/period time of the task the AOI runs in.

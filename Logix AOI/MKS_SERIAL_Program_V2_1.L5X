@@ -1,0 +1,2116 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RSLogix5000Content SchemaRevision="1.0" SoftwareRevision="35.01" TargetName="MKS" TargetType="Program" TargetClass="Standard" ContainsContext="true" Owner="SCCMADMIN, HITCHINER Manufacturing Co., Inc." ExportDate="Mon Nov 02 12:00:00 2026" ExportOptions="References NoRawData L5KData Context Dependencies ForceProtectedEncoding AllProjDocTrans">
+<Controller Use="Context" Name="BenchPLC_Template">
+<DataTypes Use="Context">
+</DataTypes>
+<Programs Use="Context">
+<Program Use="Target" Name="MKS" TestEdits="false" MainRoutineName="MKS_DISPATCH" Disabled="false" Class="Standard" UseAsFolder="false">
+<Description>
+<![CDATA[MKS T2BA valve over ProSoft PLX3x ASCII. V2.1: single comm handler, request/done sequences, reply validation, valve error status (VST), status (R7/R37), interlock (RIN), comm and PLX fault reporting.]]>
+</Description>
+<Tags>
+<Tag Name="Home_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI/Program: send a single Home (J) command. One command per press.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Open_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI/Program: send Open (O). One command per press. Blocked while homing.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Close_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI/Program: send Close (C). One command per press. Blocked while homing.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Serial_Control_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI/Program: put valve in serial control (xjp1 then D1). Runs once per request.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Analog_Control_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI/Program: return valve to analog setpoint (D0). One command per press.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Homing_MKS_Valve_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI/Program: run full homing sequence (xjp1, D1, J, wait, D0). Runs once per request; release to re-arm.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Read_Position_Active" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Enable background polling: position (R6), status (R7, R37), errors (VST), interlock (RIN).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Valve_POS_Active" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Enable serial position control. Valve is driven to Valve_POS_SP_INT; resent when setpoint changes.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Valve_POS_SP_INT" TagType="Base" DataType="INT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Position setpoint in % open (0-100). Clamped before sending.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[25]]>
+</Data>
+</Tag>
+<Tag Name="Valve_POS_Real" TagType="Base" DataType="REAL" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Valve position in % open, from the R6 reply.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0.0]]>
+</Data>
+</Tag>
+<Tag Name="Homing_Active" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Status: a Home (J) command was sent and the 30 s homing window is running.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Serial_Mode_Set" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Status: PLC has commanded serial setpoint A (D1). Cleared when D0 is sent.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Analog_Control_Mode_Set" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Status: PLC has commanded analog setpoint (D0). Opposite of MKS_Serial_Mode_Set.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="POS_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI: one-time position read (R6). Same as Read_Valve_POS_Request.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Read_Valve_POS_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI: one-time position read (R6).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Revision" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Program revision.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[4,'V2.1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_Override" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS command (from MKS directly, not in T2BA manual): puts the valve in serial mode instead of analog. Must be followed by D1.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[4,'xjp1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_Serial" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS: activate setpoint A (serial control). Sent right after xjp1.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[2,'D1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_Analog" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS: activate analog setpoint.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[2,'D0$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_Home" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS: home / learn valve (up to 30 s).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[1,'J$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_Open" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS: drive valve full open.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[1,'o$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_Close" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS: drive valve full closed.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[1,'c$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_PosMode" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS: setpoint A type = position.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[3,'T10$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_S1" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS: setpoint A value prefix. Setpoint digits are appended.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[2,'S1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_R6" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS request: valve position, reply V+xx.x]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[2,'R6$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_R7" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS request: operational status, reply M x y z w]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[2,'R7$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_VST" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS request: error status, reply 0000xxxx (hex bits)]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[3,'VST$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_RIN" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS request: motion interlock status, reply IN0 / IN1]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[3,'RIN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_R37" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - MKS request: system status, reply M x y z]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[3,'R37$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_CRLF" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - Carriage return + line feed (end of every MKS message).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[2,'$0D$0A$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_CR" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - Carriage return. Used to find the end of a reply.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[1,'$0D$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Str_Space" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[CONSTANT - Single space. Used to strip spaces from status replies.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[1,' $00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Step" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler step. 0 idle, 5 build, 6 pre-read, 10 send, 20/22/25 wait reply, 26-52 parse, 30 done/gap, 90 fault/retry.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Cmd_Code" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Command being handled: 1 xjp1, 2 D1, 3 D0, 4 J, 5 O, 6 C, 7 T10, 8 S1xx, 9 R6, 10 R7, 11 VST, 12 RIN, 13 R37. 9 and up expect a reply.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Tx_MSG" TagType="Base" DataType="MESSAGE" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[The ONLY transmit MSG. Writes Tx_Buf to PLX SintData[4000] (ASCII transmit block).]]>
+</Description>
+<Data Format="Message">
+<MessageParameters MessageType="CIP Data Table Write" RemoteElement="SintData[4000]" RequestedLength="40" ConnectedFlag="2" ConnectionPath="Prosoft" CommTypeCode="0" LocalIndex="0" LocalElement="Tx_Buf[0]"/>
+</Data>
+</Tag>
+<Tag Name="Rx_MSG" TagType="Base" DataType="MESSAGE" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[The ONLY receive MSG. Reads PLX SintData[0] (ASCII receive block) into Rx_Buf.]]>
+</Description>
+<Data Format="Message">
+<MessageParameters MessageType="CIP Data Table Read" RemoteElement="SintData[0]" RequestedLength="80" ConnectedFlag="2" ConnectionPath="Prosoft" CommTypeCode="0" LocalIndex="0" LocalElement="Rx_Buf[0]"/>
+</Data>
+</Tag>
+<Tag Name="Tx_Buf" TagType="Base" DataType="SINT" Dimensions="40" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[PLX transmit block. [0..1] sequence no, [2..3] rx ack, [4..5] char delay, [6..7] length, [8..] text.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Buf" TagType="Base" DataType="SINT" Dimensions="80" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[PLX receive block. [0..1] rx seq, [2..3] tx count, [4..5] rx count, [6..7] rx state, [12..13] tx state, [16..17] config error, [18..] text.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]>
+</Data>
+</Tag>
+<Tag Name="Tx_Seq" TagType="Base" DataType="SINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[PLX transmit sequence number. Changed for every message so the PLX knows there is new data. Cycles 1-100.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[1]]>
+</Data>
+</Tag>
+<Tag Name="Tx_Str" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Command text before CR LF is added.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Tx_Line" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Command text with CR LF, copied into Tx_Buf.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Seq" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[PLX receive sequence number from the latest read.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Seq_Last" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Receive sequence number captured just before sending a request. A different value means a new reply arrived.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Count" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Number of characters in the last received message (PLX word 2).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Len" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Working copy of the received character count.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Start" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Rx_Buf index where reply text starts (18, or 19 if a leading LF is present).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[18]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Text" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Reply text with CR LF removed.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Work" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Scratch string used when deleting spaces.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Rx_CR_Pos" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Position of CR in the reply (0 = not found).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Sp_Pos" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Position of a space in the reply (0 = none left).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Pos_Start" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Character where the number starts in an R6 reply (2, or 3 to skip a +).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[2]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Qty" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Number of characters to copy with MID.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Reject_Count" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Diagnostic: replies that did not match the request (wrong prefix/length/bad hex).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Poll_Idle_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Idle time at step 0 before a background poll is sent. Commands always go first.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,150,0]]]>
+</Data>
+</Tag>
+<Tag Name="Poll_Index" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Background poll rotation 0-7. Even = R6, 1 = R7, 3 = VST, 5 = RIN, 7 = R37.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Rx_Retry_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Pause between receive reads while waiting for a reply.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,20,0]]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Watchdog" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Max time for one message (send + reply + parse). Done = timeout fault.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,3000,0]]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Gap_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Gap between messages so the valve has time to act (manual: commands execute in 25 ms or less).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,100,0]]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Retry_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Wait after a comm fault before trying again.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,5000,0]]]>
+</Data>
+</Tag>
+<Tag Name="SetPos_SP_Loaded" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Setpoint value that was put into the last S1 message.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="Override_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request to comm handler: send xjp1. Hold until Override_Cmd_Done.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Override_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler: xjp1 was delivered (true about 100 ms).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Serial_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request to comm handler: send D1. Hold until Serial_Cmd_Done.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Serial_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler: D1 was delivered (true about 100 ms).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Analog_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request to comm handler: send D0. Hold until Analog_Cmd_Done.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Analog_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler: D0 was delivered (true about 100 ms).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Home_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request to comm handler: send J. Hold until Home_Cmd_Done.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Home_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler: J was delivered (true about 100 ms).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Open_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request to comm handler: send O. Hold until Open_Cmd_Done.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Open_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler: O was delivered (true about 100 ms).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Close_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request to comm handler: send C. Hold until Close_Cmd_Done.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Close_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler: C was delivered (true about 100 ms).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="PosMode_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request to comm handler: send T10. Hold until PosMode_Cmd_Done.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="PosMode_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler: T10 was delivered (true about 100 ms).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="SetPos_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request to comm handler: send S1xx. Hold until SetPos_Cmd_Done.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="SetPos_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler: S1xx was delivered (true about 100 ms).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="ReadPos_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request to comm handler: send R6. Hold until ReadPos_Cmd_Done.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="ReadPos_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm handler: R6 was delivered (true about 100 ms).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Open_Served" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request already served; stays on until the HMI request is released (replaces ONS).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Close_Served" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request already served; stays on until the HMI request is released (replaces ONS).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Home_Served" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request already served; stays on until the HMI request is released (replaces ONS).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Analog_Served" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request already served; stays on until the HMI request is released (replaces ONS).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="ReadPos_Served" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Request already served; stays on until the HMI request is released (replaces ONS).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Home_Pending" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI Home press waiting to be sent.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Analog_Pending" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[HMI Analog press waiting to be sent.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Homing_SEQ" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Homing sequence: 10 xjp1, 20 D1, 30 J, 40 wait homing, 50 D0, 90 fault, 100 done (wait for request release).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Serial_Init_SEQ" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Serial init sequence: 10 xjp1, 20 D1, 100 done (wait for request release).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Pos_SEQ" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Position sequence: 10 xjp1 and 15 D1 (both skipped if serial already set), 20 T10, 30 S1xx, 40 D1, 50 holding.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Homing_In_Progress_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Homing window after J is delivered (manual: homing takes up to 30 s).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,30000,0]]]>
+</Data>
+</Tag>
+<Tag Name="Homing_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Status: homing sequence finished OK (on until the request is released).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Homing_Fault" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Alarm: homing sequence aborted by a comm fault. Clears when homing is started again.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Valve_POS_SP_Clamped" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Valve_POS_SP_INT limited to 0-100.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Valve_POS_SP_Sent" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Setpoint value the valve last accepted.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="Valve_POS_SP_String" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Setpoint as text (DTOS).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Valve_POS_String" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Position text from R6 reply (number, with - sign if negative).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Valve_POS_Set_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Status: the current setpoint has been sent and setpoint A is active.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Hex_Text" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Last 8 characters of VST reply.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]>
+</Data>
+</Tag>
+<Tag Name="Hex_Start" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Start position of the 8 hex characters.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[1]]>
+</Data>
+</Tag>
+<Tag Name="Hex_Index" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Hex character being converted (0-7).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Hex_Char" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[ASCII code of the hex character.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Hex_Digit" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Value 0-15 of the hex character.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Hex_Value" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Value being built from the hex characters.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Hex_Bad" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[1 = a character was not 0-9 / A-F, reply rejected.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Error_Code" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[MKS VST error word (0 = no fault). Bits decoded to MKS_Err_* tags.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_R7_Active_Setpoint" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[R7 x: 0 analog, 1-5 setpoint A-E, 6 open, 7 closed, 8 stop, 9 learning. -1 = not read yet.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="MKS_R7_Valve_Status" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[R7 y: 0 controlling, 2 open, 4 closed.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="MKS_R7_Pressure_Range" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[R7 z: 0 = 10% of FS or less, 1 = above 10%.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="MKS_R7_Sensor_Select" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[R7 w: active sensor / channel select / zero adjust code.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="MKS_R37_Remote" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[R37 x: 0 local, 1 remote.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="MKS_R37_Learn_State" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[R37 y: 0 not learning, 2 learning valve.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="MKS_R37_Valve_Control" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[R37 z: 0 open, 1 close, 2 stop, 3-7 setpoint A-E, 8 analog.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Interlock_Raw" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[RIN reply: 0 or 1. -1 = not read yet.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[-1]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_Overcurrent" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 0: Overcurrent fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_Brownout" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 1: Brownout fault. Check valve power supply.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_Watchdog" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 2: Watchdog fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_Encoder" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 3: Encoder fault. Check for valve slip; home the valve (J).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_Fan" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 4: Fan fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_Temperature" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 6: Temperature fault. Check ambient temperature.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_MRAM" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 7: MRAM fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_System" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 8: System fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_ADC1" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 10: ADC1 fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_ADC3" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 11: ADC3 fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_Ext_ADC" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 12: Ext ADC fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_RS232" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 13: RS232 fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_Homing" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 14: Homing fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Err_Interlock" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[VST bit 15: Interlock fault. Contact MKS if it repeats.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Fault_Active" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Alarm: valve reports any VST error bit.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Learning" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Status: R37 says the valve is learning (homing).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Remote_Mode" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Status: R37 says the valve is in remote operation.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Interlock_Not_Made" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Alarm: RIN reports 0. Valve will not move until pin 22 interlock is made. VERIFY polarity on the bench.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Reply_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Time since the last good reply while polling is enabled.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,5000,0]]]>
+</Data>
+</Tag>
+<Tag Name="MKS_No_Response" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Alarm: polling enabled but no valid reply for 5 s. Status values are stale.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Mode_Mismatch_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Debounce for mode mismatch (R7 is polled about every 2-3 s).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[0,6000,0]]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Mode_Mismatch" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Alarm: commanded mode (serial/analog) does not match R7 active setpoint.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Fault" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Alarm: last message failed (MSG error or timeout). Clears on the next successful message.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Fault_Count" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Diagnostic: number of comm faults since last reset.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Err_Source" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Last fault source: 1 transmit MSG error, 2 receive MSG error, 3 timeout / no valid reply, 5 message too long.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Err_Code" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Last MSG .ERR code (sources 1 and 2).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Err_ExCode" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Last MSG .EXERR extended code (sources 1 and 2).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Err_Step" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comm_Step when the last fault happened.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="Comm_Err_Cmd" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Cmd_Code when the last fault happened.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="PLX_Rx_State" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[PLX ASCII port receive state (receive block word 3).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="PLX_Tx_State" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[PLX ASCII port transmit state (receive block word 6).]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="PLX_Config_Error" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[PLX ASCII port configuration error code (receive block word 8). 0 = OK.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="PLX_Config_Fault" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Alarm: PLX reports a port configuration error.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+<Tag Name="MKS_Any_Alarm" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Summary alarm: any comm, PLX, valve, interlock, mode or homing fault.]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[0]]>
+</Data>
+</Tag>
+</Tags>
+<Routines>
+<Routine Name="MKS_DISPATCH" Type="RLL">
+<Description>
+<![CDATA[Main routine. Calls the four routines in a fixed order every scan.]]>
+</Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment>
+<![CDATA[First scan: start every state machine from idle. S:FS is the controller first-scan bit.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(S:FS)[MOV(0,Comm_Step) ,MOV(0,Homing_SEQ) ,MOV(0,Serial_Init_SEQ) ,MOV(0,Pos_SEQ) ];]]>
+</Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment>
+<![CDATA[1) Sequences and HMI requests decide WHAT needs to be sent.]]>
+</Comment>
+<Text>
+<![CDATA[JSR(MKS_Sequences,0);]]>
+</Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment>
+<![CDATA[2) Comm handler is the only code that touches Tx_MSG / Rx_MSG. It sends one command at a time.]]>
+</Comment>
+<Text>
+<![CDATA[JSR(MKS_Comm_Handler,0);]]>
+</Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment>
+<![CDATA[3) Reply parse turns the valve's text replies into numbers.]]>
+</Comment>
+<Text>
+<![CDATA[JSR(MKS_Reply_Parse,0);]]>
+</Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment>
+<![CDATA[4) Status and alarms decode error bits and build alarm flags.]]>
+</Comment>
+<Text>
+<![CDATA[JSR(MKS_Status_Alarms,0);]]>
+</Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="MKS_Sequences" Type="RLL">
+<Description>
+<![CDATA[Requests and sequences. Nothing here sends a message; each step turns on a *_Cmd_Req bit and moves on when the matching *_Cmd_Done bit comes back from the comm handler.]]>
+</Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment>
+<![CDATA[Limit the position setpoint to 0-100 % before it is ever used.]]>
+</Comment>
+<Text>
+<![CDATA[[MOV(Valve_POS_SP_INT,Valve_POS_SP_Clamped) ,LES(Valve_POS_SP_Clamped,0) MOV(0,Valve_POS_SP_Clamped) ,GRT(Valve_POS_SP_Clamped,100) MOV(100,Valve_POS_SP_Clamped) ];]]>
+</Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment>
+<![CDATA[HOMING WINDOW. Starts when any J command is delivered and holds for 30 s (seal-in, no latch). Must stay ABOVE the homing sequence so step 40 sees it on the same scan.]]>
+</Comment>
+<Text>
+<![CDATA[[XIC(Home_Cmd_Done) ,XIC(Homing_Active) XIO(Homing_In_Progress_Timer.DN) ]OTE(Homing_Active);]]>
+</Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Text>
+<![CDATA[XIC(Homing_Active)TON(Homing_In_Progress_Timer,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment>
+<![CDATA[HMI OPEN. Pattern used for every single-press command: _Served turns on when the command is done and stays on while the button is held, so one press = one command. No ONS needed.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Open_Request)[XIC(Open_Cmd_Done) ,XIC(Open_Served) ]OTE(Open_Served);]]>
+</Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment>
+<![CDATA[Open request: new press, or keep asking until done. Dropped while homing (valve ignores motion during homing).]]>
+</Comment>
+<Text>
+<![CDATA[[XIC(Open_Request) XIO(Open_Served) ,XIC(Open_Cmd_Req) XIO(Open_Cmd_Done) ]XIO(Homing_Active)OTE(Open_Cmd_Req);]]>
+</Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment>
+<![CDATA[HMI CLOSE (V1.0 rung 10 could never be true, so Close never worked).]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Close_Request)[XIC(Close_Cmd_Done) ,XIC(Close_Served) ]OTE(Close_Served);]]>
+</Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Text>
+<![CDATA[[XIC(Close_Request) XIO(Close_Served) ,XIC(Close_Cmd_Req) XIO(Close_Cmd_Done) ]XIO(Homing_Active)OTE(Close_Cmd_Req);]]>
+</Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Comment>
+<![CDATA[HMI HOME (single J command only - use Homing_MKS_Valve_Request for the full sequence).]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Home_Request)[XIC(Home_Cmd_Done) ,XIC(Home_Served) ]OTE(Home_Served);]]>
+</Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Text>
+<![CDATA[[XIC(Home_Request) XIO(Home_Served) ,XIC(Home_Pending) XIO(Home_Cmd_Done) ]XIO(Homing_Active)OTE(Home_Pending);]]>
+</Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Comment>
+<![CDATA[HMI ANALOG MODE (D0).]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Analog_Control_Request)[XIC(Analog_Cmd_Done) ,XIC(Analog_Served) ]OTE(Analog_Served);]]>
+</Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Text>
+<![CDATA[[XIC(Analog_Control_Request) XIO(Analog_Served) ,XIC(Analog_Pending) XIO(Analog_Cmd_Done) ]XIO(Homing_Active)OTE(Analog_Pending);]]>
+</Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Comment>
+<![CDATA[HMI ONE-TIME POSITION READ (either HMI bit).]]>
+</Comment>
+<Text>
+<![CDATA[[XIC(Read_Valve_POS_Request) ,XIC(POS_Request) ][XIC(ReadPos_Cmd_Done) ,XIC(ReadPos_Served) ]OTE(ReadPos_Served);]]>
+</Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Text>
+<![CDATA[[[XIC(Read_Valve_POS_Request) ,XIC(POS_Request) ] XIO(ReadPos_Served) ,XIC(ReadPos_Cmd_Req) XIO(ReadPos_Cmd_Done) ]OTE(ReadPos_Cmd_Req);]]>
+</Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Comment>
+<![CDATA[FULL HOMING SEQUENCE. Step 0 -> 10 when requested.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Homing_MKS_Valve_Request)EQU(Homing_SEQ,0)MOV(10,Homing_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment>
+<![CDATA[Step 10: xjp1 delivered (valve now in serial mode) -> step 20.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Homing_SEQ,10)XIC(Override_Cmd_Done)MOV(20,Homing_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Comment>
+<![CDATA[Step 20: D1 delivered (always follows xjp1) -> step 30.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Homing_SEQ,20)XIC(Serial_Cmd_Done)MOV(30,Homing_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Comment>
+<![CDATA[Step 30: J delivered -> step 40 (Homing_Active is now on).]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Homing_SEQ,30)XIC(Home_Cmd_Done)MOV(40,Homing_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Comment>
+<![CDATA[Step 40: wait for the 30 s homing window to end -> step 50.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Homing_SEQ,40)XIO(Homing_Active)MOV(50,Homing_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Comment>
+<![CDATA[Step 50: D0 delivered (back to analog) -> step 100.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Homing_SEQ,50)XIC(Analog_Cmd_Done)MOV(100,Homing_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment>
+<![CDATA[Step 90 (fault) / 100 (done): wait for the request to be released so homing runs only once per request.]]>
+</Comment>
+<Text>
+<![CDATA[[EQU(Homing_SEQ,90) ,EQU(Homing_SEQ,100) ]XIO(Homing_MKS_Valve_Request)MOV(0,Homing_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Comment>
+<![CDATA[Abort homing to step 90 if a comm fault happens while a command is outstanding.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,90)LIM(10,Homing_SEQ,50)MOV(90,Homing_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment>
+<![CDATA[Homing fault alarm: on at step 90, stays on until a new homing starts (seal-in).]]>
+</Comment>
+<Text>
+<![CDATA[[EQU(Homing_SEQ,90) ,XIC(Homing_Fault) NEQ(Homing_SEQ,10) ]OTE(Homing_Fault);]]>
+</Text>
+</Rung>
+<Rung Number="22" Type="N">
+<Text>
+<![CDATA[EQU(Homing_SEQ,100)OTE(Homing_Done);]]>
+</Text>
+</Rung>
+<Rung Number="23" Type="N">
+<Comment>
+<![CDATA[SERIAL INIT SEQUENCE (HMI). Step 0 -> 10 when requested.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Serial_Control_Request)EQU(Serial_Init_SEQ,0)MOV(10,Serial_Init_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="24" Type="N">
+<Comment>
+<![CDATA[Step 10: xjp1 delivered (valve now in serial mode) -> step 20.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Serial_Init_SEQ,10)XIC(Override_Cmd_Done)MOV(20,Serial_Init_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="25" Type="N">
+<Comment>
+<![CDATA[Step 20: D1 delivered (always follows xjp1) -> step 100.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Serial_Init_SEQ,20)XIC(Serial_Cmd_Done)MOV(100,Serial_Init_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="26" Type="N">
+<Comment>
+<![CDATA[Step 100: wait for request release.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Serial_Init_SEQ,100)XIO(Serial_Control_Request)MOV(0,Serial_Init_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="27" Type="N">
+<Comment>
+<![CDATA[Abort on comm fault.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,90)LIM(10,Serial_Init_SEQ,20)MOV(100,Serial_Init_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="28" Type="N">
+<Comment>
+<![CDATA[MODE STATUS. Serial mode is set when D1 is delivered and cleared when D0 is delivered (seal-in, no latch). Stays ABOVE the position sequence.]]>
+</Comment>
+<Text>
+<![CDATA[[XIC(Serial_Cmd_Done) ,XIC(MKS_Serial_Mode_Set) XIO(Analog_Cmd_Done) ]OTE(MKS_Serial_Mode_Set);]]>
+</Text>
+</Rung>
+<Rung Number="29" Type="N">
+<Text>
+<![CDATA[XIO(MKS_Serial_Mode_Set)OTE(Analog_Control_Mode_Set);]]>
+</Text>
+</Rung>
+<Rung Number="30" Type="N">
+<Comment>
+<![CDATA[POSITION SEQUENCE. Reset to 0 when position control is off or a homing sequence is running (steps 10-50). It restarts by itself after homing.]]>
+</Comment>
+<Text>
+<![CDATA[[XIO(Valve_POS_Active) ,LIM(10,Homing_SEQ,50) ,XIC(Homing_Active) ]MOV(0,Pos_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="31" Type="N">
+<Comment>
+<![CDATA[Step 0 -> 10 when position control is turned on.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Valve_POS_Active)EQU(Pos_SEQ,0)XIO(Homing_Active)[LES(Homing_SEQ,10) ,GRT(Homing_SEQ,50) ]MOV(10,Pos_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="32" Type="N">
+<Comment>
+<![CDATA[Step 10: if serial mode is already set skip to step 20. Otherwise wait for xjp1 (puts valve in serial mode) -> step 15.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Pos_SEQ,10)[XIC(MKS_Serial_Mode_Set) MOV(20,Pos_SEQ) ,XIO(MKS_Serial_Mode_Set) XIC(Override_Cmd_Done) MOV(15,Pos_SEQ) ];]]>
+</Text>
+</Rung>
+<Rung Number="33" Type="N">
+<Comment>
+<![CDATA[Step 15: D1 delivered right after xjp1, as MKS specifies -> step 20.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Pos_SEQ,15)XIC(Serial_Cmd_Done)MOV(20,Pos_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="34" Type="N">
+<Comment>
+<![CDATA[Step 20: T10 (setpoint A = position) delivered -> step 30.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Pos_SEQ,20)XIC(PosMode_Cmd_Done)MOV(30,Pos_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="35" Type="N">
+<Comment>
+<![CDATA[Step 30: S1xx delivered -> remember the value that was sent, step 40.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Pos_SEQ,30)XIC(SetPos_Cmd_Done)[MOV(SetPos_SP_Loaded,Valve_POS_SP_Sent) ,MOV(40,Pos_SEQ) ];]]>
+</Text>
+</Rung>
+<Rung Number="36" Type="N">
+<Comment>
+<![CDATA[Step 40: D1 delivered (re-activates setpoint A with the new value) -> step 50.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Pos_SEQ,40)XIC(Serial_Cmd_Done)MOV(50,Pos_SEQ);]]>
+</Text>
+</Rung>
+<Rung Number="37" Type="N">
+<Comment>
+<![CDATA[Step 50 HOLDING: nothing is sent until the setpoint changes (-> 30) or serial mode is lost (-> 10). Replaces the V1.0 resend every second.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Pos_SEQ,50)[NEQ(Valve_POS_SP_Clamped,Valve_POS_SP_Sent) MOV(30,Pos_SEQ) ,XIO(MKS_Serial_Mode_Set) MOV(10,Pos_SEQ) ];]]>
+</Text>
+</Rung>
+<Rung Number="38" Type="N">
+<Text>
+<![CDATA[EQU(Pos_SEQ,50)OTE(Valve_POS_Set_Done);]]>
+</Text>
+</Rung>
+<Rung Number="39" Type="N">
+<Comment>
+<![CDATA[REQUEST BITS. One OTE per request; every source is ORed in a branch (no duplicate coils).]]>
+</Comment>
+<Text>
+<![CDATA[[EQU(Homing_SEQ,10) ,EQU(Serial_Init_SEQ,10) ,EQU(Pos_SEQ,10) ]OTE(Override_Cmd_Req);]]>
+</Text>
+</Rung>
+<Rung Number="40" Type="N">
+<Text>
+<![CDATA[[EQU(Homing_SEQ,20) ,EQU(Serial_Init_SEQ,20) ,EQU(Pos_SEQ,15) ,EQU(Pos_SEQ,40) ]OTE(Serial_Cmd_Req);]]>
+</Text>
+</Rung>
+<Rung Number="41" Type="N">
+<Text>
+<![CDATA[[EQU(Homing_SEQ,50) ,XIC(Analog_Pending) ]OTE(Analog_Cmd_Req);]]>
+</Text>
+</Rung>
+<Rung Number="42" Type="N">
+<Text>
+<![CDATA[[EQU(Homing_SEQ,30) ,XIC(Home_Pending) ]OTE(Home_Cmd_Req);]]>
+</Text>
+</Rung>
+<Rung Number="43" Type="N">
+<Text>
+<![CDATA[EQU(Pos_SEQ,20)OTE(PosMode_Cmd_Req);]]>
+</Text>
+</Rung>
+<Rung Number="44" Type="N">
+<Text>
+<![CDATA[EQU(Pos_SEQ,30)OTE(SetPos_Cmd_Req);]]>
+</Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="MKS_Comm_Handler" Type="RLL">
+<Description>
+<![CDATA[Comm handler. The ONLY place Tx_MSG and Rx_MSG are used. One command at a time: pick (0) -> build (5) -> pre-read (6, requests only) -> send (10) -> wait reply (20/25) -> parse (26-52, see MKS_Reply_Parse) -> gap (30) -> idle. Faults go to 90.]]>
+</Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment>
+<![CDATA[Background poll timer: only runs while idle with polling enabled. Commands below always win over polling.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(Read_Position_Active)TON(Poll_Idle_Timer,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment>
+<![CDATA[STEP 0 - PICK A JOB. Rung order = priority. The first rung that moves Comm_Step off 0 makes every rung below it false for the rest of the scan.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(Override_Cmd_Req)[MOV(1,Cmd_Code) ,COP(Str_Override,Tx_Str,1) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(Serial_Cmd_Req)[MOV(2,Cmd_Code) ,COP(Str_Serial,Tx_Str,1) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(Analog_Cmd_Req)[MOV(3,Cmd_Code) ,COP(Str_Analog,Tx_Str,1) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(Home_Cmd_Req)[MOV(4,Cmd_Code) ,COP(Str_Home,Tx_Str,1) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment>
+<![CDATA[Close has priority over Open.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(Close_Cmd_Req)[MOV(6,Cmd_Code) ,COP(Str_Close,Tx_Str,1) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(Open_Cmd_Req)[MOV(5,Cmd_Code) ,COP(Str_Open,Tx_Str,1) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(PosMode_Cmd_Req)[MOV(7,Cmd_Code) ,COP(Str_PosMode,Tx_Str,1) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Comment>
+<![CDATA[Setpoint: number to text, then 'S1' + text. Works for 0, 5, 25 and 100. The value used is saved in SetPos_SP_Loaded.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(SetPos_Cmd_Req)[MOV(8,Cmd_Code) ,MOV(Valve_POS_SP_Clamped,SetPos_SP_Loaded) ,DTOS(SetPos_SP_Loaded,Valve_POS_SP_String) ,CONCAT(Str_S1,Valve_POS_SP_String,Tx_Str) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(ReadPos_Cmd_Req)[MOV(9,Cmd_Code) ,COP(Str_R6,Tx_Str,1) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Comment>
+<![CDATA[Lowest priority: background poll. Even index = R6 position; odd indexes rotate R7, VST, RIN, R37. Position updates about twice as often as the status items.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,0)XIC(Poll_Idle_Timer.DN)[XIO(Poll_Index.0) MOV(9,Cmd_Code) COP(Str_R6,Tx_Str,1) ,EQU(Poll_Index,1) MOV(10,Cmd_Code) COP(Str_R7,Tx_Str,1) ,EQU(Poll_Index,3) MOV(11,Cmd_Code) COP(Str_VST,Tx_Str,1) ,EQU(Poll_Index,5) MOV(12,Cmd_Code) COP(Str_RIN,Tx_Str,1) ,EQU(Poll_Index,7) MOV(13,Cmd_Code) COP(Str_R37,Tx_Str,1) ,ADD(Poll_Index,1,Poll_Index) ,GRT(Poll_Index,7) MOV(0,Poll_Index) ,MOV(5,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Comment>
+<![CDATA[STEP 5 - BUILD. Add CR LF to the command.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,5)CONCAT(Tx_Str,Str_CRLF,Tx_Line);]]>
+</Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Comment>
+<![CDATA[Fill the PLX transmit block: new sequence number in word 0 (the PLX transmits when it changes), length in word 3, text from byte 8. Requests (code 9+) go to a pre-read first; commands go straight to send.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,5)LIM(1,Tx_Line.LEN,30)[ADD(Tx_Seq,1,Tx_Seq) ,GRT(Tx_Seq,100) MOV(1,Tx_Seq) ,MOV(Tx_Seq,Tx_Buf[0]) ,MOV(0,Tx_Buf[1]) ,MOV(Tx_Line.LEN,Tx_Buf[6]) ,MOV(0,Tx_Buf[7]) ,COP(Tx_Line.DATA[0],Tx_Buf[8],Tx_Line.LEN) ,GEQ(Cmd_Code,9) MOV(6,Comm_Step) ,LES(Cmd_Code,9) MOV(10,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Comment>
+<![CDATA[Still at step 5 means the message was too long for Tx_Buf - fault.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,5)[MOV(5,Comm_Err_Source) ,MOV(Comm_Step,Comm_Err_Step) ,MOV(Cmd_Code,Comm_Err_Cmd) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(90,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment>
+<![CDATA[RECEIVE MSG - the only MSG instruction for Rx_MSG. Used at step 6 (pre-read) and step 20 (wait for reply). A MSG starts when its rung goes false-to-true, so no ONS is needed.]]>
+</Comment>
+<Text>
+<![CDATA[[EQU(Comm_Step,6) ,EQU(Comm_Step,20) ]MSG(Rx_MSG);]]>
+</Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Comment>
+<![CDATA[Every completed read also updates the PLX port status words (error status).]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Rx_MSG.DN)[COP(Rx_Buf[6],PLX_Rx_State,1) ,COP(Rx_Buf[12],PLX_Tx_State,1) ,COP(Rx_Buf[16],PLX_Config_Error,1) ];]]>
+</Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Comment>
+<![CDATA[STEP 6 - PRE-READ. Remember the current receive sequence number so the reply to THIS request can be recognized.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,6)XIC(Rx_MSG.EN)XIC(Rx_MSG.DN)[COP(Rx_Buf[0],Rx_Seq_Last,1) ,MOV(10,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Comment>
+<![CDATA[STEP 10 - SEND. The only MSG instruction for Tx_MSG.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,10)MSG(Tx_MSG);]]>
+</Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Comment>
+<![CDATA[Sent. Requests wait for a reply (20); commands go to done (30).]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,10)XIC(Tx_MSG.EN)XIC(Tx_MSG.DN)[GEQ(Cmd_Code,9) MOV(20,Comm_Step) ,LES(Cmd_Code,9) MOV(30,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment>
+<![CDATA[STEP 20 - read finished -> check it. EN is checked with DN because DN stays on after the rung goes false.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,20)XIC(Rx_MSG.EN)XIC(Rx_MSG.DN)MOV(25,Comm_Step);]]>
+</Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Comment>
+<![CDATA[STEP 25 - same sequence number = no reply yet, wait and read again (22). New number = new reply, parse it (26).]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,25)[COP(Rx_Buf[0],Rx_Seq,1) ,EQU(Rx_Seq,Rx_Seq_Last) MOV(22,Comm_Step) ,NEQ(Rx_Seq,Rx_Seq_Last) MOV(Rx_Seq,Rx_Seq_Last) MOV(26,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment>
+<![CDATA[STEP 22 - short pause before reading again. This makes the MSG rung false for at least one scan, which a MSG needs before it can start again.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,22)[TON(Rx_Retry_Timer,?,?) ,XIC(Rx_Retry_Timer.DN) MOV(20,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="22" Type="N">
+<Comment>
+<![CDATA[WATCHDOG. Times each message from pre-read through parsing. Step 30 (the gap) is left out so the timer resets between back-to-back messages. Must stay ABOVE the fault rungs.]]>
+</Comment>
+<Text>
+<![CDATA[[LIM(6,Comm_Step,29) ,LIM(31,Comm_Step,59) ]TON(Comm_Watchdog,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="23" Type="N">
+<Comment>
+<![CDATA[FAULT: timeout - no valid reply in time.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Comm_Watchdog.DN)[MOV(3,Comm_Err_Source) ,MOV(0,Comm_Err_Code) ,MOV(0,Comm_Err_ExCode) ,MOV(Comm_Step,Comm_Err_Step) ,MOV(Cmd_Code,Comm_Err_Cmd) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(90,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="24" Type="N">
+<Comment>
+<![CDATA[FAULT: transmit MSG error. Error codes saved for troubleshooting.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,10)XIC(Tx_MSG.ER)[MOV(1,Comm_Err_Source) ,MOV(Tx_MSG.ERR,Comm_Err_Code) ,MOV(Tx_MSG.EXERR,Comm_Err_ExCode) ,MOV(Comm_Step,Comm_Err_Step) ,MOV(Cmd_Code,Comm_Err_Cmd) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(90,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="25" Type="N">
+<Comment>
+<![CDATA[FAULT: receive MSG error.]]>
+</Comment>
+<Text>
+<![CDATA[[EQU(Comm_Step,6) ,EQU(Comm_Step,20) ]XIC(Rx_MSG.ER)[MOV(2,Comm_Err_Source) ,MOV(Rx_MSG.ERR,Comm_Err_Code) ,MOV(Rx_MSG.EXERR,Comm_Err_ExCode) ,MOV(Comm_Step,Comm_Err_Step) ,MOV(Cmd_Code,Comm_Err_Cmd) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(90,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="26" Type="N">
+<Comment>
+<![CDATA[STEP 30 - DONE. Short gap so the valve can act on the command, then back to idle.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,30)[TON(Comm_Gap_Timer,?,?) ,XIC(Comm_Gap_Timer.DN) MOV(0,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="27" Type="N">
+<Comment>
+<![CDATA[STEP 90 - FAULT. Wait, then idle. Requests still on are retried automatically.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,90)[TON(Comm_Retry_Timer,?,?) ,XIC(Comm_Retry_Timer.DN) MOV(0,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="28" Type="N">
+<Comment>
+<![CDATA[Comm fault alarm: on at step 90, stays on until a message succeeds (seal-in).]]>
+</Comment>
+<Text>
+<![CDATA[[EQU(Comm_Step,90) ,XIC(Comm_Fault) NEQ(Comm_Step,30) ]OTE(Comm_Fault);]]>
+</Text>
+</Rung>
+<Rung Number="29" Type="N">
+<Comment>
+<![CDATA[DONE BITS. One per command; true during the step-30 gap.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,1)OTE(Override_Cmd_Done);]]>
+</Text>
+</Rung>
+<Rung Number="30" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,2)OTE(Serial_Cmd_Done);]]>
+</Text>
+</Rung>
+<Rung Number="31" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,3)OTE(Analog_Cmd_Done);]]>
+</Text>
+</Rung>
+<Rung Number="32" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,4)OTE(Home_Cmd_Done);]]>
+</Text>
+</Rung>
+<Rung Number="33" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,5)OTE(Open_Cmd_Done);]]>
+</Text>
+</Rung>
+<Rung Number="34" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,6)OTE(Close_Cmd_Done);]]>
+</Text>
+</Rung>
+<Rung Number="35" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,7)OTE(PosMode_Cmd_Done);]]>
+</Text>
+</Rung>
+<Rung Number="36" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,8)OTE(SetPos_Cmd_Done);]]>
+</Text>
+</Rung>
+<Rung Number="37" Type="N">
+<Text>
+<![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,9)OTE(ReadPos_Cmd_Done);]]>
+</Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="MKS_Reply_Parse" Type="RLL">
+<Description>
+<![CDATA[Reply parse (comm handler steps 26-52). Checks that each reply matches the request before using it. A reply that does not match is counted in Rx_Reject_Count and the handler keeps waiting (step 22); if the right reply never comes, the watchdog faults.]]>
+</Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment>
+<![CDATA[STEP 26 - get the received character count. Skip a leading LF if the PLX left one from the previous message.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,26)[COP(Rx_Buf[4],Rx_Count,1) ,MOV(Rx_Count,Rx_Len) ,MOV(18,Rx_Start) ,EQU(Rx_Buf[18],10) MOV(19,Rx_Start) SUB(Rx_Len,1,Rx_Len) ];]]>
+</Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment>
+<![CDATA[Copy the text into Rx_Text and cut it at the CR. The LIM protects against copying past the end of Rx_Buf.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,26)LIM(1,Rx_Len,60)[MOV(Rx_Len,Rx_Text.LEN) ,COP(Rx_Buf[Rx_Start],Rx_Text.DATA[0],Rx_Len) ,FIND(Rx_Text,Str_CR,1,Rx_CR_Pos) ,GRT(Rx_CR_Pos,0) SUB(Rx_CR_Pos,1,Rx_Text.LEN) ,MOV(27,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment>
+<![CDATA[Bad length - reject.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,26)[ADD(Rx_Reject_Count,1,Rx_Reject_Count) ,MOV(22,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment>
+<![CDATA[STEP 27 - R6 POSITION. Reply must start with 'V' (86). Number starts at character 2, or 3 if character 2 is '+' (43). A '-' sign is kept. MID copies from there to the end, STOR converts to REAL.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,27)EQU(Cmd_Code,9)GEQ(Rx_Text.LEN,3)EQU(Rx_Text.DATA[0],86)[MOV(2,Rx_Pos_Start) ,EQU(Rx_Text.DATA[1],43) MOV(3,Rx_Pos_Start) ,SUB(Rx_Text.LEN,Rx_Pos_Start,Rx_Qty) ,ADD(Rx_Qty,1,Rx_Qty) ,MID(Rx_Text,Rx_Qty,Rx_Pos_Start,Valve_POS_String) ,STOR(Valve_POS_String,Valve_POS_Real) ,MOV(30,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment>
+<![CDATA[R7 / R37 STATUS. Reply must start with 'M' (77). Go strip spaces (step 40).]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,27)[EQU(Cmd_Code,10) ,EQU(Cmd_Code,13) ]GEQ(Rx_Text.LEN,1)EQU(Rx_Text.DATA[0],77)MOV(40,Comm_Step);]]>
+</Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment>
+<![CDATA[VST ERROR STATUS. Needs at least 8 characters. Go convert hex (step 50).]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,27)EQU(Cmd_Code,11)GEQ(Rx_Text.LEN,8)MOV(50,Comm_Step);]]>
+</Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Comment>
+<![CDATA[RIN INTERLOCK. Reply must be 'IN' (73, 78) followed by 0 or 1.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,27)EQU(Cmd_Code,12)GEQ(Rx_Text.LEN,3)EQU(Rx_Text.DATA[0],73)EQU(Rx_Text.DATA[1],78)[SUB(Rx_Text.DATA[2],48,MKS_Interlock_Raw) ,MOV(30,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Comment>
+<![CDATA[Still at 27 = reply did not match the request - reject and keep waiting.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,27)[ADD(Rx_Reject_Count,1,Rx_Reject_Count) ,MOV(22,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Comment>
+<![CDATA[STEP 40 - remove one space per scan until none are left ('M 1 0 3' becomes 'M103').]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,40)[FIND(Rx_Text,Str_Space,1,Rx_Sp_Pos) ,GRT(Rx_Sp_Pos,0) DELETE(Rx_Text,1,Rx_Sp_Pos,Rx_Work) COP(Rx_Work,Rx_Text,1) ,EQU(Rx_Sp_Pos,0) MOV(41,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Comment>
+<![CDATA[STEP 41 - R7 'Mxyzw': digit = ASCII code minus 48.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,41)EQU(Cmd_Code,10)EQU(Rx_Text.LEN,5)[SUB(Rx_Text.DATA[1],48,MKS_R7_Active_Setpoint) ,SUB(Rx_Text.DATA[2],48,MKS_R7_Valve_Status) ,SUB(Rx_Text.DATA[3],48,MKS_R7_Pressure_Range) ,SUB(Rx_Text.DATA[4],48,MKS_R7_Sensor_Select) ,MOV(30,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Comment>
+<![CDATA[R37 'Mxyz'.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,41)EQU(Cmd_Code,13)EQU(Rx_Text.LEN,4)[SUB(Rx_Text.DATA[1],48,MKS_R37_Remote) ,SUB(Rx_Text.DATA[2],48,MKS_R37_Learn_State) ,SUB(Rx_Text.DATA[3],48,MKS_R37_Valve_Control) ,MOV(30,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Comment>
+<![CDATA[Wrong length (e.g. an R7 reply while waiting for R37) - reject.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,41)[ADD(Rx_Reject_Count,1,Rx_Reject_Count) ,MOV(22,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Comment>
+<![CDATA[STEP 50 - VST: take the last 8 characters and reset the converter.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,50)[SUB(Rx_Text.LEN,7,Hex_Start) ,MID(Rx_Text,8,Hex_Start,Hex_Text) ,MOV(0,Hex_Value) ,MOV(0,Hex_Index) ,MOV(0,Hex_Bad) ,MOV(51,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Comment>
+<![CDATA[STEP 51 - convert one hex character per scan: 0-9 = code-48, A-F = code-55, a-f = code-87. Value = value x 16 + digit. Anything else marks the reply bad.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,51)[MOV(Hex_Text.DATA[Hex_Index],Hex_Char) ,MOV(99,Hex_Digit) ,LIM(48,Hex_Char,57) SUB(Hex_Char,48,Hex_Digit) ,LIM(65,Hex_Char,70) SUB(Hex_Char,55,Hex_Digit) ,LIM(97,Hex_Char,102) SUB(Hex_Char,87,Hex_Digit) ,GRT(Hex_Digit,15) MOV(1,Hex_Bad) MOV(0,Hex_Digit) ,MUL(Hex_Value,16,Hex_Value) ,ADD(Hex_Value,Hex_Digit,Hex_Value) ,ADD(Hex_Index,1,Hex_Index) ,GEQ(Hex_Index,8) MOV(52,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment>
+<![CDATA[STEP 52 - all 8 characters good: store the error word.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,52)EQU(Hex_Bad,0)[MOV(Hex_Value,MKS_Error_Code) ,MOV(30,Comm_Step) ];]]>
+</Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Comment>
+<![CDATA[Bad hex - reject.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(Comm_Step,52)[ADD(Rx_Reject_Count,1,Rx_Reject_Count) ,MOV(22,Comm_Step) ];]]>
+</Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="MKS_Status_Alarms" Type="RLL">
+<Description>
+<![CDATA[Status and alarms. Decodes the valve error word and builds alarm bits from comm, PLX and valve status.]]>
+</Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment>
+<![CDATA[VST ERROR BITS (MKS manual Table 25). Each bit of MKS_Error_Code to its own alarm. Bits 5 (EtherCAT) and 9 (RS485) are not used on this valve.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(MKS_Error_Code.0)OTE(MKS_Err_Overcurrent);]]>
+</Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.1)OTE(MKS_Err_Brownout);]]>
+</Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.2)OTE(MKS_Err_Watchdog);]]>
+</Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.3)OTE(MKS_Err_Encoder);]]>
+</Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.4)OTE(MKS_Err_Fan);]]>
+</Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.6)OTE(MKS_Err_Temperature);]]>
+</Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.7)OTE(MKS_Err_MRAM);]]>
+</Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.8)OTE(MKS_Err_System);]]>
+</Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.10)OTE(MKS_Err_ADC1);]]>
+</Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.11)OTE(MKS_Err_ADC3);]]>
+</Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.12)OTE(MKS_Err_Ext_ADC);]]>
+</Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.13)OTE(MKS_Err_RS232);]]>
+</Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.14)OTE(MKS_Err_Homing);]]>
+</Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Error_Code.15)OTE(MKS_Err_Interlock);]]>
+</Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment>
+<![CDATA[Any valve error.]]>
+</Comment>
+<Text>
+<![CDATA[NEQ(MKS_Error_Code,0)OTE(MKS_Fault_Active);]]>
+</Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Comment>
+<![CDATA[R37 status bits.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(MKS_R37_Learn_State,2)OTE(MKS_Learning);]]>
+</Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Text>
+<![CDATA[EQU(MKS_R37_Remote,1)OTE(MKS_Remote_Mode);]]>
+</Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Comment>
+<![CDATA[Interlock: RIN = 0. (-1 = not read yet, no alarm.) Verify on the bench that 1 means the interlock is made.]]>
+</Comment>
+<Text>
+<![CDATA[EQU(MKS_Interlock_Raw,0)OTE(MKS_Interlock_Not_Made);]]>
+</Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Comment>
+<![CDATA[PLX port configuration error.]]>
+</Comment>
+<Text>
+<![CDATA[NEQ(PLX_Config_Error,0)OTE(PLX_Config_Fault);]]>
+</Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment>
+<![CDATA[NO RESPONSE. Timer resets every time a reply is parsed OK (step 30 with a request code). Only runs while polling is enabled.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Read_Position_Active)[NEQ(Comm_Step,30) ,LES(Cmd_Code,9) ]TON(MKS_Reply_Timer,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Text>
+<![CDATA[XIC(MKS_Reply_Timer.DN)OTE(MKS_No_Response);]]>
+</Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment>
+<![CDATA[MODE MISMATCH. PLC says serial but valve reports analog setpoint, or the other way round, for 6 s. Ignored while homing or when replies are stale.]]>
+</Comment>
+<Text>
+<![CDATA[[XIC(MKS_Serial_Mode_Set) EQU(MKS_R7_Active_Setpoint,0) ,XIO(MKS_Serial_Mode_Set) EQU(MKS_R7_Active_Setpoint,1) ]XIC(Read_Position_Active)XIO(Homing_Active)XIO(MKS_No_Response)TON(Mode_Mismatch_Timer,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="22" Type="N">
+<Text>
+<![CDATA[XIC(Mode_Mismatch_Timer.DN)OTE(MKS_Mode_Mismatch);]]>
+</Text>
+</Rung>
+<Rung Number="23" Type="N">
+<Comment>
+<![CDATA[SUMMARY ALARM for the HMI.]]>
+</Comment>
+<Text>
+<![CDATA[[XIC(Comm_Fault) ,XIC(MKS_No_Response) ,XIC(PLX_Config_Fault) ,XIC(MKS_Fault_Active) ,XIC(MKS_Interlock_Not_Made) ,XIC(MKS_Mode_Mismatch) ,XIC(Homing_Fault) ]OTE(MKS_Any_Alarm);]]>
+</Text>
+</Rung>
+</RLLContent>
+</Routine>
+</Routines>
+</Program>
+</Programs>
+</Controller>
+</RSLogix5000Content>

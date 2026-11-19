@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RSLogix5000Content SchemaRevision="1.0" SoftwareRevision="35.00" TargetName="CylValveSA" TargetType="AddOnInstructionDefinition" TargetRevision="1.0 " TargetLastEdited="2026-10-25T12:00:00.000Z" ContainsContext="true" ExportDate="Sun Oct 25 12:00:00 2026" ExportOptions="References NoRawData L5KData DecoratedData Context Dependencies ForceProtectedEncoding">
+<Controller Use="Context" Name="AOI_Export">
+<DataTypes Use="Context">
+</DataTypes>
+<AddOnInstructionDefinitions Use="Context">
+<AddOnInstructionDefinition Use="Target" Name="CylValveSA" Revision="1.0" ExecutePrescan="false" ExecutePostscan="false" ExecuteEnableInFalse="false" CreatedDate="2026-10-25T12:00:00.000Z" CreatedBy="Claude" EditedDate="2026-10-25T12:00:00.000Z" EditedBy="Claude" SoftwareRevision="v35.00">
+<Description>
+<![CDATA[Single-acting (spring return) solenoid valve / air cylinder control with extend and retract prox feedback, travel watchdog timers, and digital alarms.]]>
+</Description>
+<Parameters>
+<Parameter Name="EnableIn" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Enable Input - System Defined Parameter]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[1]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="1"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="EnableOut" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Enable Output - System Defined Parameter]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Cmd_Extend" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Extend request - hold on to extend. Off = solenoid off, spring returns cylinder home (retracted)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Inp_ProgReset" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Program reset for latched alarms (wire to reset pushbutton or HMI bit)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Inp_ExtendedPrx" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Extended position prox input]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Inp_RetractedPrx" TagType="Base" DataType="BOOL" Usage="Input" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Retracted position prox input]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Cfg_ExtendTime" TagType="Base" DataType="DINT" Usage="Input" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Extend watchdog time (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[5000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="5000"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Cfg_RetractTime" TagType="Base" DataType="DINT" Usage="Input" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Retract watchdog time (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[5000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="5000"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Out_ExtendSol" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="true" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Extend solenoid output (single-acting, spring return)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_Extended" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Cylinder confirmed extended]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_Retracted" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Cylinder confirmed retracted]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_Extending" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Extend requested, not yet at extended prox]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_Retracting" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Extend solenoid off (spring returning), not yet at retracted prox]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_ExtendFault" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Failed to reach extended prox within watchdog time (clears when request drops or prox is made)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_RetractFault" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Failed to reach retracted prox within watchdog time (clears when request drops or prox is made)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_ProxFault" TagType="Base" DataType="BOOL" Usage="Output" Radix="Decimal" Required="false" Visible="false" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Both proxes on at the same time]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_ExtendLast" TagType="Base" DataType="DINT" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Last extend time (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_ExtendAvg" TagType="Base" DataType="REAL" Usage="Output" Radix="Float" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Average of last 5 extend times (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_RetractLast" TagType="Base" DataType="DINT" Usage="Output" Radix="Decimal" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Last retract time (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Sts_RetractAvg" TagType="Base" DataType="REAL" Usage="Output" Radix="Float" Required="false" Visible="true" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Average of last 5 retract times (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</Parameter>
+<Parameter Name="Alm_ExtendFail" TagType="Base" DataType="ALARM_DIGITAL" Usage="InOut" Required="true" Visible="true" Constant="false">
+<Description>
+<![CDATA[Digital alarm - cylinder failed to extend]]>
+</Description>
+</Parameter>
+<Parameter Name="Alm_RetractFail" TagType="Base" DataType="ALARM_DIGITAL" Usage="InOut" Required="true" Visible="true" Constant="false">
+<Description>
+<![CDATA[Digital alarm - cylinder failed to retract]]>
+</Description>
+</Parameter>
+</Parameters>
+<LocalTags>
+<LocalTag Name="ExtendWD" DataType="TIMER" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Extend watchdog timer]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,5000,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="5000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="RetractWD" DataType="TIMER" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Retract watchdog timer]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,5000,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="5000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="ExtendTimes" DataType="DINT" Dimensions="5" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Last 5 extend times (ms), [0] = newest]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,0,0,0,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Array DataType="DINT" Dimensions="5" Radix="Decimal">
+<Element Index="[0]" Value="0"/>
+<Element Index="[1]" Value="0"/>
+<Element Index="[2]" Value="0"/>
+<Element Index="[3]" Value="0"/>
+<Element Index="[4]" Value="0"/>
+</Array>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="ExtendCount" DataType="DINT" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Number of extend times recorded (0-5)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="ExtendStroke" DataType="TIMER" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Retentive timer measuring extend stroke time]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,600000,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="600000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="ExtendLogged" DataType="BOOL" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Time for this extend has been recorded]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="ExtendSum" DataType="REAL" Radix="Float" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Sum of recorded extend times (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="RetractTimes" DataType="DINT" Dimensions="5" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Last 5 retract times (ms), [0] = newest]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,0,0,0,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Array DataType="DINT" Dimensions="5" Radix="Decimal">
+<Element Index="[0]" Value="0"/>
+<Element Index="[1]" Value="0"/>
+<Element Index="[2]" Value="0"/>
+<Element Index="[3]" Value="0"/>
+<Element Index="[4]" Value="0"/>
+</Array>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="RetractCount" DataType="DINT" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Number of retract times recorded (0-5)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="DINT" Radix="Decimal" Value="0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="RetractStroke" DataType="TIMER" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Retentive timer measuring retract stroke time]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[[0,600000,0]]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<Structure DataType="TIMER">
+<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="600000"/>
+<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
+<DataValueMember Name="EN" DataType="BOOL" Value="0"/>
+<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
+<DataValueMember Name="DN" DataType="BOOL" Value="0"/>
+</Structure>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="RetractLogged" DataType="BOOL" Radix="Decimal" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Time for this retract has been recorded]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="BOOL" Radix="Decimal" Value="0"/>
+</DefaultData>
+</LocalTag>
+<LocalTag Name="RetractSum" DataType="REAL" Radix="Float" ExternalAccess="Read Only">
+<Description>
+<![CDATA[Sum of recorded retract times (ms)]]>
+</Description>
+<DefaultData Format="L5K">
+<![CDATA[0.00000000e+000]]>
+</DefaultData>
+<DefaultData Format="Decorated">
+<DataValue DataType="REAL" Radix="Float" Value="0.0"/>
+</DefaultData>
+</LocalTag>
+</LocalTags>
+<Routines>
+<Routine Name="Logic" Type="RLL">
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment>
+<![CDATA[Extend watchdog preset from Cfg_ExtendTime (ms). Only loaded if > 0, otherwise the 5000 ms default is kept.]]>
+</Comment>
+<Text>
+<![CDATA[GRT(Cfg_ExtendTime,0)MOV(Cfg_ExtendTime,ExtendWD.PRE);]]>
+</Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment>
+<![CDATA[Retract watchdog preset from Cfg_RetractTime (ms). Only loaded if > 0, otherwise the 5000 ms default is kept.]]>
+</Comment>
+<Text>
+<![CDATA[GRT(Cfg_RetractTime,0)MOV(Cfg_RetractTime,RetractWD.PRE);]]>
+</Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment>
+<![CDATA[Extend solenoid - on only while Cmd_Extend is held. When off, the spring returns the cylinder home.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Cmd_Extend)OTE(Out_ExtendSol);]]>
+</Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment>
+<![CDATA[Confirmed extended: extended prox on, retracted prox off.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Inp_ExtendedPrx)XIO(Inp_RetractedPrx)OTE(Sts_Extended);]]>
+</Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment>
+<![CDATA[Confirmed retracted: retracted prox on, extended prox off.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Inp_RetractedPrx)XIO(Inp_ExtendedPrx)OTE(Sts_Retracted);]]>
+</Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment>
+<![CDATA[Prox fault: both proxes on at the same time.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Inp_ExtendedPrx)XIC(Inp_RetractedPrx)OTE(Sts_ProxFault);]]>
+</Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Comment>
+<![CDATA[Extending: extend solenoid on and not yet confirmed extended.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Out_ExtendSol)XIO(Sts_Extended)OTE(Sts_Extending);]]>
+</Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Comment>
+<![CDATA[Retracting: extend solenoid off (spring returning) and not yet confirmed retracted.]]>
+</Comment>
+<Text>
+<![CDATA[XIO(Out_ExtendSol)XIO(Sts_Retracted)OTE(Sts_Retracting);]]>
+</Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Comment>
+<![CDATA[Extend watchdog: times while extending, resets when extended prox is made or the request drops.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_Extending)TON(ExtendWD,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Comment>
+<![CDATA[Retract watchdog: times while spring returning, resets when retracted prox is made or the extend request comes back on.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_Retracting)TON(RetractWD,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Comment>
+<![CDATA[Extend fault: watchdog timed out.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(ExtendWD.DN)OTE(Sts_ExtendFault);]]>
+</Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Comment>
+<![CDATA[Retract fault: watchdog timed out.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(RetractWD.DN)OTE(Sts_RetractFault);]]>
+</Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Comment>
+<![CDATA[Digital alarm - failed to extend. Alarm tag must be configured as Latched; Inp_ProgReset clears it once the fault is gone.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_ExtendFault)ALMD(Alm_ExtendFail,0,Inp_ProgReset,0,0);]]>
+</Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Comment>
+<![CDATA[Digital alarm - failed to retract. Alarm tag must be configured as Latched; Inp_ProgReset clears it once the fault is gone.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_RetractFault)ALMD(Alm_RetractFail,0,Inp_ProgReset,0,0);]]>
+</Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment>
+<![CDATA[EXTEND STROKE TIME: Reset the stroke timer whenever the extend solenoid is off, ready for the next extend.]]>
+</Comment>
+<Text>
+<![CDATA[XIO(Out_ExtendSol)RES(ExtendStroke);]]>
+</Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Comment>
+<![CDATA[Stroke timer accumulates while extending. Being an RTO, it holds its value once the extended prox is made.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_Extending)RTO(ExtendStroke,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Comment>
+<![CDATA[Record the extend time once per move (ExtendLogged is from the previous scan, so this rung is true for one scan). Shift the array down (oldest in [4] dropped), store newest in [0], output it as Sts_ExtendLast, and count samples up to 5.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Out_ExtendSol)XIC(Sts_Extended)XIO(ExtendLogged)GRT(ExtendStroke.ACC,0)[MOV(ExtendTimes[3],ExtendTimes[4])MOV(ExtendTimes[2],ExtendTimes[3])MOV(ExtendTimes[1],ExtendTimes[2])MOV(ExtendTimes[0],ExtendTimes[1])MOV(ExtendStroke.ACC,ExtendTimes[0])MOV(ExtendStroke.ACC,Sts_ExtendLast) ,LES(ExtendCount,5)ADD(ExtendCount,1,ExtendCount) ];]]>
+</Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Comment>
+<![CDATA[Seal-in: ExtendLogged turns on once extended and stays on while the extend solenoid is on, so each move is recorded only once.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Out_ExtendSol)[XIC(Sts_Extended) ,XIC(ExtendLogged) ]OTE(ExtendLogged);]]>
+</Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Comment>
+<![CDATA[Average extend time (ms) = sum of the array / number of samples recorded.]]>
+</Comment>
+<Text>
+<![CDATA[GRT(ExtendCount,0)ADD(ExtendTimes[0],ExtendTimes[1],ExtendSum)ADD(ExtendSum,ExtendTimes[2],ExtendSum)ADD(ExtendSum,ExtendTimes[3],ExtendSum)ADD(ExtendSum,ExtendTimes[4],ExtendSum)DIV(ExtendSum,ExtendCount,Sts_ExtendAvg);]]>
+</Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment>
+<![CDATA[RETRACT STROKE TIME: Reset the stroke timer whenever the extend solenoid is on, ready for the next retract.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Out_ExtendSol)RES(RetractStroke);]]>
+</Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Comment>
+<![CDATA[Stroke timer accumulates while retracting. Being an RTO, it holds its value once the retracted prox is made.]]>
+</Comment>
+<Text>
+<![CDATA[XIC(Sts_Retracting)RTO(RetractStroke,?,?);]]>
+</Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment>
+<![CDATA[Record the retract time once per move (RetractLogged is from the previous scan, so this rung is true for one scan). Shift the array down (oldest in [4] dropped), store newest in [0], output it as Sts_RetractLast, and count samples up to 5.]]>
+</Comment>
+<Text>
+<![CDATA[XIO(Out_ExtendSol)XIC(Sts_Retracted)XIO(RetractLogged)GRT(RetractStroke.ACC,0)[MOV(RetractTimes[3],RetractTimes[4])MOV(RetractTimes[2],RetractTimes[3])MOV(RetractTimes[1],RetractTimes[2])MOV(RetractTimes[0],RetractTimes[1])MOV(RetractStroke.ACC,RetractTimes[0])MOV(RetractStroke.ACC,Sts_RetractLast) ,LES(RetractCount,5)ADD(RetractCount,1,RetractCount) ];]]>
+</Text>
+</Rung>
+<Rung Number="22" Type="N">
+<Comment>
+<![CDATA[Seal-in: RetractLogged turns on once retracted and stays on while the extend solenoid is off, so each move is recorded only once.]]>
+</Comment>
+<Text>
+<![CDATA[XIO(Out_ExtendSol)[XIC(Sts_Retracted) ,XIC(RetractLogged) ]OTE(RetractLogged);]]>
+</Text>
+</Rung>
+<Rung Number="23" Type="N">
+<Comment>
+<![CDATA[Average retract time (ms) = sum of the array / number of samples recorded.]]>
+</Comment>
+<Text>
+<![CDATA[GRT(RetractCount,0)ADD(RetractTimes[0],RetractTimes[1],RetractSum)ADD(RetractSum,RetractTimes[2],RetractSum)ADD(RetractSum,RetractTimes[3],RetractSum)ADD(RetractSum,RetractTimes[4],RetractSum)DIV(RetractSum,RetractCount,Sts_RetractAvg);]]>
+</Text>
+</Rung>
+</RLLContent>
+</Routine>
+</Routines>
+</AddOnInstructionDefinition>
+</AddOnInstructionDefinitions>
+</Controller>
+</RSLogix5000Content>

@@ -1,0 +1,1391 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RSLogix5000Content SchemaRevision="1.0" SoftwareRevision="35.01" TargetName="PYRO" TargetType="Program" TargetClass="Standard" ContainsContext="true" ExportDate="Tue Nov 03 12:00:00 2026" ExportOptions="References NoRawData L5KData Context Dependencies ForceProtectedEncoding AllProjDocTrans">
+<Controller Use="Context" Name="BenchPLC_Template">
+<DataTypes Use="Context">
+<DataType Name="STRING_200" Family="StringFamily" Class="User">
+<Description><![CDATA[String up to 200 characters (pyrometer poll replies can exceed 82).]]></Description>
+<Members>
+<Member Name="LEN" DataType="DINT" Dimension="0" Radix="Decimal" Hidden="false" ExternalAccess="Read/Write"/>
+<Member Name="DATA" DataType="SINT" Dimension="200" Radix="ASCII" Hidden="false" ExternalAccess="Read/Write"/>
+</Members>
+</DataType>
+</DataTypes>
+<Programs Use="Context">
+<Program Use="Target" Name="PYRO" TestEdits="false" MainRoutineName="PYRO_DISPATCH" Disabled="false" Class="Standard" UseAsFolder="false">
+<Description><![CDATA[Williamson Gold/Pro pyrometer (stand-alone, firmware 2.0.5868+) via PLX31-EIP-ASCII4 port 1. 1 s Willybus poll with per-value enables, full settings table (Get/Set) for an HMI, PLC replacements for IM alarms. V1.0]]></Description>
+<Tags>
+<Tag Name="Poll_Enable" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI/Program: poll the enabled measured values every Poll_Timer preset (1 s).]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Meas_Enable" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: one bit per measured value to poll. Bit 0 UT ... bit 13 FP. Default UT, FT, FL, AT.]]></Description>
+<Comments>
+<Comment Operand=".0"><![CDATA[Enable UT - Unfiltered Temperature]]></Comment>
+<Comment Operand=".1"><![CDATA[Enable FT - Filtered Temperature]]></Comment>
+<Comment Operand=".2"><![CDATA[Enable FL - Temperature Status code]]></Comment>
+<Comment Operand=".3"><![CDATA[Enable AT - Ambient Temperature]]></Comment>
+<Comment Operand=".4"><![CDATA[Enable SS - Signal Strength (Emissivity)]]></Comment>
+<Comment Operand=".5"><![CDATA[Enable SD - Signal Dilution (Infrared Energy)]]></Comment>
+<Comment Operand=".6"><![CDATA[Enable SE - SWL Energy]]></Comment>
+<Comment Operand=".7"><![CDATA[Enable US - SWL Unfiltered Temp]]></Comment>
+<Comment Operand=".8"><![CDATA[Enable FS - SWL Filtered Temp]]></Comment>
+<Comment Operand=".9"><![CDATA[Enable RA - Ratio]]></Comment>
+<Comment Operand=".10"><![CDATA[Enable CS - Cell Strength]]></Comment>
+<Comment Operand=".11"><![CDATA[Enable RC - Rate of Change (IM only)]]></Comment>
+<Comment Operand=".12"><![CDATA[Enable UP - Unfiltered Percent (PilotEye)]]></Comment>
+<Comment Operand=".13"><![CDATA[Enable FP - Filtered Percent (PilotEye)]]></Comment>
+</Comments>
+<Data Format="L5K"><![CDATA[15]]></Data>
+</Tag>
+<Tag Name="Meas_Value" TagType="Base" DataType="REAL" Dimensions="14" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Measured values, index = Meas_Enable bit. Temperatures always degF.]]></Description>
+<Comments>
+<Comment Operand="[0]"><![CDATA[UT - Unfiltered Temperature degF]]></Comment>
+<Comment Operand="[1]"><![CDATA[FT - Filtered Temperature degF]]></Comment>
+<Comment Operand="[2]"><![CDATA[FL - Temperature Status code code]]></Comment>
+<Comment Operand="[3]"><![CDATA[AT - Ambient Temperature degF]]></Comment>
+<Comment Operand="[4]"><![CDATA[SS - Signal Strength (Emissivity) ]]></Comment>
+<Comment Operand="[5]"><![CDATA[SD - Signal Dilution (Infrared Energy) ]]></Comment>
+<Comment Operand="[6]"><![CDATA[SE - SWL Energy ]]></Comment>
+<Comment Operand="[7]"><![CDATA[US - SWL Unfiltered Temp degF]]></Comment>
+<Comment Operand="[8]"><![CDATA[FS - SWL Filtered Temp degF]]></Comment>
+<Comment Operand="[9]"><![CDATA[RA - Ratio ]]></Comment>
+<Comment Operand="[10]"><![CDATA[CS - Cell Strength ]]></Comment>
+<Comment Operand="[11]"><![CDATA[RC - Rate of Change (IM only) ]]></Comment>
+<Comment Operand="[12]"><![CDATA[UP - Unfiltered Percent (PilotEye) %]]></Comment>
+<Comment Operand="[13]"><![CDATA[FP - Filtered Percent (PilotEye) %]]></Comment>
+</Comments>
+<Data Format="L5K"><![CDATA[[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]]]></Data>
+</Tag>
+<Tag Name="Meas_Status" TagType="Base" DataType="DINT" Dimensions="14" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Per value: 0 not polled, 1 OK, 2 blank reply (not supported by this sensor).]]></Description>
+<Comments>
+<Comment Operand="[0]"><![CDATA[UT status]]></Comment>
+<Comment Operand="[1]"><![CDATA[FT status]]></Comment>
+<Comment Operand="[2]"><![CDATA[FL status]]></Comment>
+<Comment Operand="[3]"><![CDATA[AT status]]></Comment>
+<Comment Operand="[4]"><![CDATA[SS status]]></Comment>
+<Comment Operand="[5]"><![CDATA[SD status]]></Comment>
+<Comment Operand="[6]"><![CDATA[SE status]]></Comment>
+<Comment Operand="[7]"><![CDATA[US status]]></Comment>
+<Comment Operand="[8]"><![CDATA[FS status]]></Comment>
+<Comment Operand="[9]"><![CDATA[RA status]]></Comment>
+<Comment Operand="[10]"><![CDATA[CS status]]></Comment>
+<Comment Operand="[11]"><![CDATA[RC status]]></Comment>
+<Comment Operand="[12]"><![CDATA[UP status]]></Comment>
+<Comment Operand="[13]"><![CDATA[FP status]]></Comment>
+</Comments>
+<Data Format="L5K"><![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Pyro_Unfiltered_Temp" TagType="Base" DataType="REAL" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Copy of Meas_Value[0] (UT), degF.]]></Description>
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Pyro_Filtered_Temp" TagType="Base" DataType="REAL" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Copy of Meas_Value[1] (FT), degF. Use for control.]]></Description>
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Pyro_Ambient_Temp" TagType="Base" DataType="REAL" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Copy of Meas_Value[3] (AT), degF.]]></Description>
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Pyro_Temp_Status" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Temperature status code from FL (-1 = not read).]]></Description>
+<Data Format="L5K"><![CDATA[-1]]></Data>
+</Tag>
+<Tag Name="Pyro_Temp_Valid" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[FL = 0 or 16: temperature is valid.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Below_Range" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[FL = 3 or 19: below range.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Above_Range" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[FL = 4 or 20: above range.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Out_Of_Range" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Below or above range.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Low_Energy" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[FL = 5 or 21: low energy.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Sig_Str_Low" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[FL = 7 or 23: signal strength below limit.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Sig_Str_High" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[FL = 8 or 24: signal strength above limit.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Sig_Dil_Low" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[FL = 9 or 25: signal dilution below limit.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Sig_Dil_High" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[FL = 10 or 26: signal dilution above limit.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_ESP_Hold" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[FL 16-26: ESP sample and hold is enabled.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Ambient_Warning" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Ambient temp (AT) above Ambient Limit (AMBLIM), like the IM status message.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="ROC_Value" TagType="Base" DataType="REAL" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Rate of change of filtered temp, degF per second, calculated by the PLC (RC needs an IM).]]></Description>
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Alarm1_Param" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: PLC alarm 1 parameter (replaces IM Alarm 1): 0 Disabled, 1 Filtered Temp > SP, 2 Out of Range, 3 Ambient > SP, 4 Sig Dilution < SP, 5 Sig Strength < SP, 6 ESP Status, 7 Cell Strength < SP, 8 Rate of Change > SP.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Alarm1_SP" TagType="Base" DataType="REAL" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: PLC alarm 1 setpoint in the units of the selected value (degF for temps).]]></Description>
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Alarm1_Active" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[PLC alarm 1 condition true (also true if the alarm is enabled and data is stale).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Alarm1_Relay" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Failsafe output like the IM relay: ON when enabled and NOT in alarm. Wire to an output card if needed.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Alarm2_Param" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: PLC alarm 2 parameter (replaces IM Alarm 2): 0 Disabled, 1 Filtered Temp > SP, 2 Out of Range, 3 Ambient > SP, 4 Sig Dilution < SP, 5 Sig Strength < SP, 6 ESP Status, 7 Cell Strength < SP, 8 Rate of Change > SP.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Alarm2_SP" TagType="Base" DataType="REAL" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: PLC alarm 2 setpoint in the units of the selected value (degF for temps).]]></Description>
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Alarm2_Active" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[PLC alarm 2 condition true (also true if the alarm is enabled and data is stale).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Alarm2_Relay" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Failsafe output like the IM relay: ON when enabled and NOT in alarm. Wire to an output card if needed.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Set_Cmd" TagType="Base" DataType="STRING" Dimensions="93" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - sensor command name for each setting.]]></Description>
+<Comments>
+<Comment Operand="[0]"><![CDATA[AVETIME Average Time (Signal Conditioning): seconds x10]]></Comment>
+<Comment Operand="[1]"><![CDATA[RSTAVG Out of Range (Signal Conditioning): 0 Save Buffer, 1 Clear Buffer]]></Comment>
+<Comment Operand="[2]"><![CDATA[PEAKTIME Peak Hold Delay (Signal Conditioning): seconds x10]]></Comment>
+<Comment Operand="[3]"><![CDATA[HOLDFILT Advanced Filter (Signal Conditioning): 0 Disabled, 1 Continued Avg, 2 PH-Time Reset, 3 PH-Temp Reset, 4 VH-Time Reset, 5 VH-Temp Reset]]></Comment>
+<Comment Operand="[4]"><![CDATA[PHTIME Peak Hold Time (Signal Conditioning): seconds x10]]></Comment>
+<Comment Operand="[5]"><![CDATA[PHTEMP Peak Hold Temp (Signal Conditioning): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[6]"><![CDATA[VHTIME Valley Hold Time (Signal Conditioning): seconds x10]]></Comment>
+<Comment Operand="[7]"><![CDATA[VHTEMP Valley Hold Temp (Signal Conditioning): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[8]"><![CDATA[TSCALE Temp Scale (Signal Conditioning): 0 Fahrenheit, 1 Celsius (display only; serial values are always degF)]]></Comment>
+<Comment Operand="[9]"><![CDATA[PLTWARN Pilot Warn Level (Signal Conditioning): PilotEye only]]></Comment>
+<Comment Operand="[10]"><![CDATA[EMISS Emissivity (Signal Conditioning): x1000]]></Comment>
+<Comment Operand="[11]"><![CDATA[ESLOPEOF E-Slope Offset (Signal Conditioning): x1000, dual/multi only]]></Comment>
+<Comment Operand="[12]"><![CDATA[LOWGAIN Low Energy Gain (Signal Conditioning): 0 G=1, 1 G=10, 2 G=100, 3 G=1000]]></Comment>
+<Comment Operand="[13]"><![CDATA[LOWEN Low Energy Level (Signal Conditioning): range 0..32767, divisor 1]]></Comment>
+<Comment Operand="[14]"><![CDATA[INPARAM Input Parameter (Configure I/O): 0 Disabled, 1 E-Slope Offset, 2 Emissivity, 3 Alarm 1 Temp]]></Comment>
+<Comment Operand="[15]"><![CDATA[INSCALE Input Scale (Configure I/O): 0 4-20mA, 1 0-20mA]]></Comment>
+<Comment Operand="[16]"><![CDATA[EXTEMIS Ext Emissivity (Configure I/O): x1000]]></Comment>
+<Comment Operand="[17]"><![CDATA[OPARAM Output Param (Configure I/O): 0 Filtered Temp, 1 Unfiltered Temp, 2 Ambient Temp, 3 Sig Strength, 4 Sig Dilution, 5 Cell Strength (sensor analog output, Analog mode only)]]></Comment>
+<Comment Operand="[18]"><![CDATA[OSCALE Output Scale (Configure I/O): 0 4-20mA, 1 0-20mA]]></Comment>
+<Comment Operand="[19]"><![CDATA[O1BOT 0/4mA Temp (Configure I/O): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[20]"><![CDATA[O1TOP 20mA Temp (Configure I/O): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[21]"><![CDATA[SSSCALE Sig Str Scale (Configure I/O): 0 0-1000, 1 0-1500, 2 0-2000]]></Comment>
+<Comment Operand="[22]"><![CDATA[TTLPARAM TTL Alarm Param (Configure Alarms): 0 Disabled, 1 Filtered Temp, 2 Out of Range, 3 Ambient Warning, 4 Sig Dilution, 5 Sig Strength, 6 ESP Status, 7 Cell Strength, 8 Rate of Change]]></Comment>
+<Comment Operand="[23]"><![CDATA[TTLLOGIC TTL Alarm Logic (Configure Alarms): 0 Normal, 1 Reversed]]></Comment>
+<Comment Operand="[24]"><![CDATA[TTLTEMP TTL Alarm Temp (Configure Alarms): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[25]"><![CDATA[TTLAMB TTL Alarm Ambient (Configure Alarms): degF x10]]></Comment>
+<Comment Operand="[26]"><![CDATA[TTLEN TTL Alarm Sig Dil (Configure Alarms): range 1..9000, divisor 1]]></Comment>
+<Comment Operand="[27]"><![CDATA[TTLSIG TTL Alarm Sig Str (Configure Alarms): x1000]]></Comment>
+<Comment Operand="[28]"><![CDATA[TTLCELL TTL Alarm Cell (Configure Alarms): x10]]></Comment>
+<Comment Operand="[29]"><![CDATA[ESPTABLE Appl Algorithm (Configure ESP): 0 Dual / Ratio, 1 Algorithm 1, 2 Algorithm 2, 3 Algorithm 3, 4 Algorithm 4, 5 Algorithm 5, 6 Algorithm 6, 7 Algorithm 7, 8 Algorithm 8]]></Comment>
+<Comment Operand="[30]"><![CDATA[ESPSH ESP Sample Hold (Configure ESP): 0 Disabled, 1 Enabled, 2 Diagnostic]]></Comment>
+<Comment Operand="[31]"><![CDATA[SIGSTREN Sig Str Filters (Configure ESP): 0 Disabled, 1 Enabled]]></Comment>
+<Comment Operand="[32]"><![CDATA[SIGSTRLO Lo Sig Strength (Configure ESP): x1000]]></Comment>
+<Comment Operand="[33]"><![CDATA[SIGSTRHI Hi Sig Strength (Configure ESP): x1000]]></Comment>
+<Comment Operand="[34]"><![CDATA[SIGDILEN Sig Dil Filters (Configure ESP): 0 Disabled, 1 Enabled]]></Comment>
+<Comment Operand="[35]"><![CDATA[SIGDILLO Lo Sig Dilution (Configure ESP): range 1..9000, divisor 1]]></Comment>
+<Comment Operand="[36]"><![CDATA[SIGDILHI Hi Sig Dilution (Configure ESP): range 1..9000, divisor 1]]></Comment>
+<Comment Operand="[37]"><![CDATA[SIGSTRAV Sig St Avg Time (Configure ESP): seconds x10]]></Comment>
+<Comment Operand="[38]"><![CDATA[SIGDILAV Sig Di Avg Time (Configure ESP): seconds x10]]></Comment>
+<Comment Operand="[39]"><![CDATA[SWLMODE Single-Wave Mode (Configure ESP): 0 Disabled, 1 Enabled]]></Comment>
+<Comment Operand="[40]"><![CDATA[DIAGOUT Out Test (Diagnostics): 0 Disabled, 1 4mA, 2 12mA, 3 20mA]]></Comment>
+<Comment Operand="[41]"><![CDATA[DIAGTTL TTL Test (Diagnostics): 0 Disabled, 1 TTL On, 2 TTL Off]]></Comment>
+<Comment Operand="[42]"><![CDATA[MENUACC Menu Access (Diagnostics): 0 Immediate, 1 Delayed]]></Comment>
+<Comment Operand="[43]"><![CDATA[MOTOR Motor Current (Diagnostics): text, max 14 chars (read only)]]></Comment>
+<Comment Operand="[44]"><![CDATA[CUSTID Customer ID (Sensor Specs): text, max 10 chars]]></Comment>
+<Comment Operand="[45]"><![CDATA[SENSORID Sensor Type (Sensor Specs): 0 Dual/Multi, 1 Auto Null, 2 Staring, 3 Pilot Monitor (read only)]]></Comment>
+<Comment Operand="[46]"><![CDATA[MODELID Model Number (Sensor Specs): text, max 10 chars]]></Comment>
+<Comment Operand="[47]"><![CDATA[SERIALID Sensor S/N (Sensor Specs): text, max 10 chars]]></Comment>
+<Comment Operand="[48]"><![CDATA[TRB Spec Bot Temp (Sensor Specs): degF x1000]]></Comment>
+<Comment Operand="[49]"><![CDATA[TRT Spec Top Temp (Sensor Specs): degF x1000]]></Comment>
+<Comment Operand="[50]"><![CDATA[FOV Field of View (Sensor Specs): text, max 14 chars]]></Comment>
+<Comment Operand="[51]"><![CDATA[DATEMANU Manufacture Date (Sensor Specs): text, max 9 chars]]></Comment>
+<Comment Operand="[52]"><![CDATA[DATELCAL Last Cal Date (Sensor Specs): text, max 9 chars]]></Comment>
+<Comment Operand="[53]"><![CDATA[DATENCAL Next Cal Date (Sensor Specs): text, max 9 chars]]></Comment>
+<Comment Operand="[54]"><![CDATA[DATEWEXP Warranty Exp Date (Sensor Specs): text, max 9 chars]]></Comment>
+<Comment Operand="[55]"><![CDATA[FIRMVER Sensor Firmware (Sensor Specs): text, max 14 chars (read only)]]></Comment>
+<Comment Operand="[56]"><![CDATA[CALMODE Field Cal (Factory Options): 0 Disabled, 1 Enabled]]></Comment>
+<Comment Operand="[57]"><![CDATA[CALBMREF BB Ref Bot (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[58]"><![CDATA[CALBMMEA Measured Bot (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[59]"><![CDATA[CALTPREF BB Ref Top (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[60]"><![CDATA[CALTPMEA Measured Top (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[61]"><![CDATA[AIMMODE Aim Light Mode (Factory Options): 0 Disabled, 1 Solid, 2 Pulsed]]></Comment>
+<Comment Operand="[62]"><![CDATA[AMBLIM Ambient Limit (Factory Options): degF x10]]></Comment>
+<Comment Operand="[63]"><![CDATA[AMBWARN Ambient Warning (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[64]"><![CDATA[HIGHEN High Energy Level (Factory Options): range 0..32767, divisor 1]]></Comment>
+<Comment Operand="[65]"><![CDATA[ESPGAIN ESP Gain (never used) (Factory Options): x1000]]></Comment>
+<Comment Operand="[66]"><![CDATA[SPECBOT Spec Bot Temp (factory) (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[67]"><![CDATA[SPECTOP Spec Top Temp (factory) (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[68]"><![CDATA[CALBOT Cal Bot Temp (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[69]"><![CDATA[CALTOP Cal Top Temp (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[70]"><![CDATA[PKTHR Pkhold Thr Temp (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[71]"><![CDATA[4DAC DAC 4mA (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[72]"><![CDATA[20DAC DAC 20mA (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[73]"><![CDATA[DETTEMP Detector Amb (Factory Options): x10]]></Comment>
+<Comment Operand="[74]"><![CDATA[ESPORNG ESP Out Range (Factory Options): 0 Low, 1 High]]></Comment>
+<Comment Operand="[75]"><![CDATA[COMTYP Comm Type (Factory Options): 0 6 Wire, 1 4 Wire WARNING: 4 Wire = half duplex and will stop 4-wire comms]]></Comment>
+<Comment Operand="[76]"><![CDATA[ANO1 Anull Out1 (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[77]"><![CDATA[ANO10 Anull Out10 (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[78]"><![CDATA[ANO100 Anull Out100 (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[79]"><![CDATA[ANO1000 Anull Out1K (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[80]"><![CDATA[ANS1 Anull Sum1 (Factory Options): range 0..2097152, divisor 1]]></Comment>
+<Comment Operand="[81]"><![CDATA[ANS10 Anull Sum10 (Factory Options): range 0..2097152, divisor 1]]></Comment>
+<Comment Operand="[82]"><![CDATA[ANS100 Anull Sum100 (Factory Options): range 0..2097152, divisor 1]]></Comment>
+<Comment Operand="[83]"><![CDATA[ANS1000 Anull Sum1K (Factory Options): range 0..2097152, divisor 1]]></Comment>
+<Comment Operand="[84]"><![CDATA[ANGAIN Anull Gain (Factory Options): range 0..40, divisor 1]]></Comment>
+<Comment Operand="[85]"><![CDATA[OFFLMP Offset Lamp (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[86]"><![CDATA[OPT1 OptZero1 (Factory Options): range -32768..32767, divisor 1]]></Comment>
+<Comment Operand="[87]"><![CDATA[OPT10 OptZero 10 (Factory Options): range -32768..32767, divisor 1]]></Comment>
+<Comment Operand="[88]"><![CDATA[OPT100 OptZero 100 (Factory Options): range -32768..32767, divisor 1]]></Comment>
+<Comment Operand="[89]"><![CDATA[OPT1000 OptZero 1000 (Factory Options): range -32768..32767, divisor 1]]></Comment>
+<Comment Operand="[90]"><![CDATA[GAINSEL Gain Select (Factory Options): 0 X1, 1 X10, 2 X100, 3 X1000, 4 AUTO (hot metal detector only)]]></Comment>
+<Comment Operand="[91]"><![CDATA[COMMEN Comm Enable (Factory Options): 0 Disabled, 1 Enabled (hot metal detector only)]]></Comment>
+<Comment Operand="[92]"><![CDATA[TPILE Thermopile (Factory Options): 0 NO, 1 YES]]></Comment>
+</Comments>
+<Data Format="L5K"><![CDATA[[[7,'AVETIME$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'RSTAVG$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'PEAKTIME$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'HOLDFILT$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'PHTIME$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'PHTEMP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'VHTIME$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'VHTEMP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'TSCALE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'PLTWARN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'EMISS$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ESLOPEOF$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'LOWGAIN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'LOWEN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'INPARAM$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'INSCALE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'EXTEMIS$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'OPARAM$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'OSCALE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'O1BOT$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'O1TOP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'SSSCALE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'TTLPARAM$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'TTLLOGIC$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'TTLTEMP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'TTLAMB$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'TTLEN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'TTLSIG$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'TTLCELL$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ESPTABLE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'ESPSH$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SIGSTREN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SIGSTRLO$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SIGSTRHI$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SIGDILEN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SIGDILLO$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SIGDILHI$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SIGSTRAV$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SIGDILAV$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'SWLMODE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'DIAGOUT$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'DIAGTTL$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'MENUACC$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'MOTOR$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'CUSTID$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SENSORID$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'MODELID$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SERIALID$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[3,'TRB$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[3,'TRT$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[3,'FOV$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'DATEMANU$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'DATELCAL$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'DATENCAL$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'DATEWEXP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'FIRMVER$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'CALMODE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'CALBMREF$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'CALBMMEA$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'CALTPREF$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'CALTPMEA$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'AIMMODE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'AMBLIM$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'AMBWARN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'HIGHEN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ESPGAIN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'SPECBOT$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'SPECTOP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'CALBOT$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'CALTOP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'PKTHR$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[4,'4DAC$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'20DAC$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'DETTEMP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ESPORNG$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'COMTYP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[4,'ANO1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'ANO10$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'ANO100$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ANO1000$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[4,'ANS1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'ANS10$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'ANS100$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ANS1000$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'ANGAIN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'OFFLMP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[4,'OPT1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'OPT10$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'OPT100$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'OPT1000$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'GAINSEL$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[6,'COMMEN$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[5,'TPILE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]]></Data>
+</Tag>
+<Tag Name="Set_Name" TagType="Base" DataType="STRING" Dimensions="93" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - menu name for the HMI.]]></Description>
+<Data Format="L5K"><![CDATA[[[12,'Average Time$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Out of Range$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Peak Hold Delay$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Advanced Filter$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[14,'Peak Hold Time$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[14,'Peak Hold Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[16,'Valley Hold Time$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[16,'Valley Hold Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'Temp Scale$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[16,'Pilot Warn Level$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'Emissivity$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[14,'E-Slope Offset$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Low Energy Gain$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[16,'Low Energy Level$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Input Parameter$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Input Scale$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[14,'Ext Emissivity$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Output Param$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Output Scale$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'0/4mA Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[9,'20mA Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[13,'Sig Str Scale$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'TTL Alarm Param$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'TTL Alarm Logic$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[14,'TTL Alarm Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[17,'TTL Alarm Ambient$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[17,'TTL Alarm Sig Dil$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[17,'TTL Alarm Sig Str$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[14,'TTL Alarm Cell$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[14,'Appl Algorithm$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'ESP Sample Hold$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Sig Str Filters$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Lo Sig Strength$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Hi Sig Strength$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Sig Dil Filters$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Lo Sig Dilution$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Hi Sig Dilution$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Sig St Avg Time$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Sig Di Avg Time$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[16,'Single-Wave Mode$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'Out Test$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'TTL Test$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Menu Access$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[13,'Motor Current$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Customer ID$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Sensor Type$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Model Number$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'Sensor S/N$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[13,'Spec Bot Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[13,'Spec Top Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[13,'Field of View$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[16,'Manufacture Date$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[13,'Last Cal Date$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[13,'Next Cal Date$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[17,'Warranty Exp Date$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Sensor Firmware$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[9,'Field Cal$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'BB Ref Bot$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Measured Bot$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'BB Ref Top$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Measured Top$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[14,'Aim Light Mode$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[13,'Ambient Limit$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Ambient Warning$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[17,'High Energy Level$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[21,'ESP Gain (never used)$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[23,'Spec Bot Temp (factory)$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[23,'Spec Top Temp (factory)$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Cal Bot Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Cal Top Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[15,'Pkhold Thr Temp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'DAC 4mA$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'DAC 20mA$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Detector Amb$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[13,'ESP Out Range$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[9,'Comm Type$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'Anull Out1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Anull Out10$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Anull Out100$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Anull Out1K$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'Anull Sum1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Anull Sum10$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'Anull Sum100$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Anull Sum1K$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'Anull Gain$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Offset Lamp$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'OptZero1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'OptZero 10$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'OptZero 100$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[12,'OptZero 1000$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Gain Select$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[11,'Comm Enable$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[10,'Thermopile$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]]></Data>
+</Tag>
+<Tag Name="Set_Group" TagType="Base" DataType="DINT" Dimensions="93" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - menu group: 1 Signal Conditioning, 2 Configure I/O, 3 Configure Alarms, 4 Configure ESP, 5 Diagnostics, 6 Sensor Specs, 7 Factory Options.]]></Description>
+<Data Format="L5K"><![CDATA[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7]]]></Data>
+</Tag>
+<Tag Name="Set_Type" TagType="Base" DataType="DINT" Dimensions="93" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - 0 number, 1 list (value = row number), 2 text, 3 temperature limited to sensor range.]]></Description>
+<Data Format="L5K"><![CDATA[[0,1,0,1,0,3,0,3,1,0,0,0,1,0,1,1,0,1,1,3,3,1,1,1,3,0,0,0,0,1,1,1,0,0,1,0,0,0,0,1,1,1,1,2,2,1,2,2,0,0,2,2,2,2,2,2,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1]]]></Data>
+</Tag>
+<Tag Name="Set_Min" TagType="Base" DataType="DINT" Dimensions="93" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - minimum raw value (text: not used).]]></Description>
+<Data Format="L5K"><![CDATA[[1,0,0,0,0,0,0,0,0,0,10,-1000,0,0,0,0,10,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-32768,-32768,-32768,-32768,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Set_Max" TagType="Base" DataType="DINT" Dimensions="93" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - maximum raw value (text: max characters).]]></Description>
+<Data Format="L5K"><![CDATA[[240,1,3600,5,3600,9000000,3600,9000000,1,100,1500,1000,3,32767,3,1,1500,5,1,9000000,9000000,2,8,1,9000000,2000,9000,2000,20,8,2,1,2000,2000,1,9000,9000,240,240,1,3,2,1,14,10,3,10,10,5000000,5000000,14,9,9,9,9,14,1,9000000,9000000,9000000,9000000,2,2000,65535,32767,2000,9000000,9000000,9000000,9000000,5000000,65535,65535,3000,1,1,65535,65535,65535,65535,2097152,2097152,2097152,2097152,40,65535,32767,32767,32767,32767,4,1,1]]]></Data>
+</Tag>
+<Tag Name="Set_Div" TagType="Base" DataType="DINT" Dimensions="93" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - divisor: engineering value = raw / divisor.]]></Description>
+<Data Format="L5K"><![CDATA[[10,1,10,1,10,1000,10,1000,1,1,1000,1000,1,1,1,1,1000,1,1,1000,1000,1,1,1,1000,10,1,1000,10,1,1,1,1000,1000,1,1,1,10,10,1,1,1,1,1,1,1,1,1,1000,1000,1,1,1,1,1,1,1,1000,1000,1000,1000,1,10,1,1,1000,1000,1000,1000,1000,1000,1,1,10,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]]]></Data>
+</Tag>
+<Tag Name="Set_Access" TagType="Base" DataType="DINT" Dimensions="93" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - 0 read/write, 1 read only.]]></Description>
+<Data Format="L5K"><![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Set_Raw" TagType="Base" DataType="DINT" Dimensions="93" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Raw value read from the sensor (Get).]]></Description>
+<Comments>
+<Comment Operand="[0]"><![CDATA[AVETIME Average Time (Signal Conditioning): seconds x10]]></Comment>
+<Comment Operand="[1]"><![CDATA[RSTAVG Out of Range (Signal Conditioning): 0 Save Buffer, 1 Clear Buffer]]></Comment>
+<Comment Operand="[2]"><![CDATA[PEAKTIME Peak Hold Delay (Signal Conditioning): seconds x10]]></Comment>
+<Comment Operand="[3]"><![CDATA[HOLDFILT Advanced Filter (Signal Conditioning): 0 Disabled, 1 Continued Avg, 2 PH-Time Reset, 3 PH-Temp Reset, 4 VH-Time Reset, 5 VH-Temp Reset]]></Comment>
+<Comment Operand="[4]"><![CDATA[PHTIME Peak Hold Time (Signal Conditioning): seconds x10]]></Comment>
+<Comment Operand="[5]"><![CDATA[PHTEMP Peak Hold Temp (Signal Conditioning): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[6]"><![CDATA[VHTIME Valley Hold Time (Signal Conditioning): seconds x10]]></Comment>
+<Comment Operand="[7]"><![CDATA[VHTEMP Valley Hold Temp (Signal Conditioning): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[8]"><![CDATA[TSCALE Temp Scale (Signal Conditioning): 0 Fahrenheit, 1 Celsius (display only; serial values are always degF)]]></Comment>
+<Comment Operand="[9]"><![CDATA[PLTWARN Pilot Warn Level (Signal Conditioning): PilotEye only]]></Comment>
+<Comment Operand="[10]"><![CDATA[EMISS Emissivity (Signal Conditioning): x1000]]></Comment>
+<Comment Operand="[11]"><![CDATA[ESLOPEOF E-Slope Offset (Signal Conditioning): x1000, dual/multi only]]></Comment>
+<Comment Operand="[12]"><![CDATA[LOWGAIN Low Energy Gain (Signal Conditioning): 0 G=1, 1 G=10, 2 G=100, 3 G=1000]]></Comment>
+<Comment Operand="[13]"><![CDATA[LOWEN Low Energy Level (Signal Conditioning): range 0..32767, divisor 1]]></Comment>
+<Comment Operand="[14]"><![CDATA[INPARAM Input Parameter (Configure I/O): 0 Disabled, 1 E-Slope Offset, 2 Emissivity, 3 Alarm 1 Temp]]></Comment>
+<Comment Operand="[15]"><![CDATA[INSCALE Input Scale (Configure I/O): 0 4-20mA, 1 0-20mA]]></Comment>
+<Comment Operand="[16]"><![CDATA[EXTEMIS Ext Emissivity (Configure I/O): x1000]]></Comment>
+<Comment Operand="[17]"><![CDATA[OPARAM Output Param (Configure I/O): 0 Filtered Temp, 1 Unfiltered Temp, 2 Ambient Temp, 3 Sig Strength, 4 Sig Dilution, 5 Cell Strength (sensor analog output, Analog mode only)]]></Comment>
+<Comment Operand="[18]"><![CDATA[OSCALE Output Scale (Configure I/O): 0 4-20mA, 1 0-20mA]]></Comment>
+<Comment Operand="[19]"><![CDATA[O1BOT 0/4mA Temp (Configure I/O): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[20]"><![CDATA[O1TOP 20mA Temp (Configure I/O): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[21]"><![CDATA[SSSCALE Sig Str Scale (Configure I/O): 0 0-1000, 1 0-1500, 2 0-2000]]></Comment>
+<Comment Operand="[22]"><![CDATA[TTLPARAM TTL Alarm Param (Configure Alarms): 0 Disabled, 1 Filtered Temp, 2 Out of Range, 3 Ambient Warning, 4 Sig Dilution, 5 Sig Strength, 6 ESP Status, 7 Cell Strength, 8 Rate of Change]]></Comment>
+<Comment Operand="[23]"><![CDATA[TTLLOGIC TTL Alarm Logic (Configure Alarms): 0 Normal, 1 Reversed]]></Comment>
+<Comment Operand="[24]"><![CDATA[TTLTEMP TTL Alarm Temp (Configure Alarms): degF x1000, limited to sensor range TRB..TRT]]></Comment>
+<Comment Operand="[25]"><![CDATA[TTLAMB TTL Alarm Ambient (Configure Alarms): degF x10]]></Comment>
+<Comment Operand="[26]"><![CDATA[TTLEN TTL Alarm Sig Dil (Configure Alarms): range 1..9000, divisor 1]]></Comment>
+<Comment Operand="[27]"><![CDATA[TTLSIG TTL Alarm Sig Str (Configure Alarms): x1000]]></Comment>
+<Comment Operand="[28]"><![CDATA[TTLCELL TTL Alarm Cell (Configure Alarms): x10]]></Comment>
+<Comment Operand="[29]"><![CDATA[ESPTABLE Appl Algorithm (Configure ESP): 0 Dual / Ratio, 1 Algorithm 1, 2 Algorithm 2, 3 Algorithm 3, 4 Algorithm 4, 5 Algorithm 5, 6 Algorithm 6, 7 Algorithm 7, 8 Algorithm 8]]></Comment>
+<Comment Operand="[30]"><![CDATA[ESPSH ESP Sample Hold (Configure ESP): 0 Disabled, 1 Enabled, 2 Diagnostic]]></Comment>
+<Comment Operand="[31]"><![CDATA[SIGSTREN Sig Str Filters (Configure ESP): 0 Disabled, 1 Enabled]]></Comment>
+<Comment Operand="[32]"><![CDATA[SIGSTRLO Lo Sig Strength (Configure ESP): x1000]]></Comment>
+<Comment Operand="[33]"><![CDATA[SIGSTRHI Hi Sig Strength (Configure ESP): x1000]]></Comment>
+<Comment Operand="[34]"><![CDATA[SIGDILEN Sig Dil Filters (Configure ESP): 0 Disabled, 1 Enabled]]></Comment>
+<Comment Operand="[35]"><![CDATA[SIGDILLO Lo Sig Dilution (Configure ESP): range 1..9000, divisor 1]]></Comment>
+<Comment Operand="[36]"><![CDATA[SIGDILHI Hi Sig Dilution (Configure ESP): range 1..9000, divisor 1]]></Comment>
+<Comment Operand="[37]"><![CDATA[SIGSTRAV Sig St Avg Time (Configure ESP): seconds x10]]></Comment>
+<Comment Operand="[38]"><![CDATA[SIGDILAV Sig Di Avg Time (Configure ESP): seconds x10]]></Comment>
+<Comment Operand="[39]"><![CDATA[SWLMODE Single-Wave Mode (Configure ESP): 0 Disabled, 1 Enabled]]></Comment>
+<Comment Operand="[40]"><![CDATA[DIAGOUT Out Test (Diagnostics): 0 Disabled, 1 4mA, 2 12mA, 3 20mA]]></Comment>
+<Comment Operand="[41]"><![CDATA[DIAGTTL TTL Test (Diagnostics): 0 Disabled, 1 TTL On, 2 TTL Off]]></Comment>
+<Comment Operand="[42]"><![CDATA[MENUACC Menu Access (Diagnostics): 0 Immediate, 1 Delayed]]></Comment>
+<Comment Operand="[43]"><![CDATA[MOTOR Motor Current (Diagnostics): text, max 14 chars (read only)]]></Comment>
+<Comment Operand="[44]"><![CDATA[CUSTID Customer ID (Sensor Specs): text, max 10 chars]]></Comment>
+<Comment Operand="[45]"><![CDATA[SENSORID Sensor Type (Sensor Specs): 0 Dual/Multi, 1 Auto Null, 2 Staring, 3 Pilot Monitor (read only)]]></Comment>
+<Comment Operand="[46]"><![CDATA[MODELID Model Number (Sensor Specs): text, max 10 chars]]></Comment>
+<Comment Operand="[47]"><![CDATA[SERIALID Sensor S/N (Sensor Specs): text, max 10 chars]]></Comment>
+<Comment Operand="[48]"><![CDATA[TRB Spec Bot Temp (Sensor Specs): degF x1000]]></Comment>
+<Comment Operand="[49]"><![CDATA[TRT Spec Top Temp (Sensor Specs): degF x1000]]></Comment>
+<Comment Operand="[50]"><![CDATA[FOV Field of View (Sensor Specs): text, max 14 chars]]></Comment>
+<Comment Operand="[51]"><![CDATA[DATEMANU Manufacture Date (Sensor Specs): text, max 9 chars]]></Comment>
+<Comment Operand="[52]"><![CDATA[DATELCAL Last Cal Date (Sensor Specs): text, max 9 chars]]></Comment>
+<Comment Operand="[53]"><![CDATA[DATENCAL Next Cal Date (Sensor Specs): text, max 9 chars]]></Comment>
+<Comment Operand="[54]"><![CDATA[DATEWEXP Warranty Exp Date (Sensor Specs): text, max 9 chars]]></Comment>
+<Comment Operand="[55]"><![CDATA[FIRMVER Sensor Firmware (Sensor Specs): text, max 14 chars (read only)]]></Comment>
+<Comment Operand="[56]"><![CDATA[CALMODE Field Cal (Factory Options): 0 Disabled, 1 Enabled]]></Comment>
+<Comment Operand="[57]"><![CDATA[CALBMREF BB Ref Bot (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[58]"><![CDATA[CALBMMEA Measured Bot (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[59]"><![CDATA[CALTPREF BB Ref Top (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[60]"><![CDATA[CALTPMEA Measured Top (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[61]"><![CDATA[AIMMODE Aim Light Mode (Factory Options): 0 Disabled, 1 Solid, 2 Pulsed]]></Comment>
+<Comment Operand="[62]"><![CDATA[AMBLIM Ambient Limit (Factory Options): degF x10]]></Comment>
+<Comment Operand="[63]"><![CDATA[AMBWARN Ambient Warning (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[64]"><![CDATA[HIGHEN High Energy Level (Factory Options): range 0..32767, divisor 1]]></Comment>
+<Comment Operand="[65]"><![CDATA[ESPGAIN ESP Gain (never used) (Factory Options): x1000]]></Comment>
+<Comment Operand="[66]"><![CDATA[SPECBOT Spec Bot Temp (factory) (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[67]"><![CDATA[SPECTOP Spec Top Temp (factory) (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[68]"><![CDATA[CALBOT Cal Bot Temp (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[69]"><![CDATA[CALTOP Cal Top Temp (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[70]"><![CDATA[PKTHR Pkhold Thr Temp (Factory Options): degF x1000]]></Comment>
+<Comment Operand="[71]"><![CDATA[4DAC DAC 4mA (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[72]"><![CDATA[20DAC DAC 20mA (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[73]"><![CDATA[DETTEMP Detector Amb (Factory Options): x10]]></Comment>
+<Comment Operand="[74]"><![CDATA[ESPORNG ESP Out Range (Factory Options): 0 Low, 1 High]]></Comment>
+<Comment Operand="[75]"><![CDATA[COMTYP Comm Type (Factory Options): 0 6 Wire, 1 4 Wire WARNING: 4 Wire = half duplex and will stop 4-wire comms]]></Comment>
+<Comment Operand="[76]"><![CDATA[ANO1 Anull Out1 (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[77]"><![CDATA[ANO10 Anull Out10 (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[78]"><![CDATA[ANO100 Anull Out100 (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[79]"><![CDATA[ANO1000 Anull Out1K (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[80]"><![CDATA[ANS1 Anull Sum1 (Factory Options): range 0..2097152, divisor 1]]></Comment>
+<Comment Operand="[81]"><![CDATA[ANS10 Anull Sum10 (Factory Options): range 0..2097152, divisor 1]]></Comment>
+<Comment Operand="[82]"><![CDATA[ANS100 Anull Sum100 (Factory Options): range 0..2097152, divisor 1]]></Comment>
+<Comment Operand="[83]"><![CDATA[ANS1000 Anull Sum1K (Factory Options): range 0..2097152, divisor 1]]></Comment>
+<Comment Operand="[84]"><![CDATA[ANGAIN Anull Gain (Factory Options): range 0..40, divisor 1]]></Comment>
+<Comment Operand="[85]"><![CDATA[OFFLMP Offset Lamp (Factory Options): range 0..65535, divisor 1]]></Comment>
+<Comment Operand="[86]"><![CDATA[OPT1 OptZero1 (Factory Options): range -32768..32767, divisor 1]]></Comment>
+<Comment Operand="[87]"><![CDATA[OPT10 OptZero 10 (Factory Options): range -32768..32767, divisor 1]]></Comment>
+<Comment Operand="[88]"><![CDATA[OPT100 OptZero 100 (Factory Options): range -32768..32767, divisor 1]]></Comment>
+<Comment Operand="[89]"><![CDATA[OPT1000 OptZero 1000 (Factory Options): range -32768..32767, divisor 1]]></Comment>
+<Comment Operand="[90]"><![CDATA[GAINSEL Gain Select (Factory Options): 0 X1, 1 X10, 2 X100, 3 X1000, 4 AUTO (hot metal detector only)]]></Comment>
+<Comment Operand="[91]"><![CDATA[COMMEN Comm Enable (Factory Options): 0 Disabled, 1 Enabled (hot metal detector only)]]></Comment>
+<Comment Operand="[92]"><![CDATA[TPILE Thermopile (Factory Options): 0 NO, 1 YES]]></Comment>
+</Comments>
+<Data Format="L5K"><![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Set_Eng" TagType="Base" DataType="REAL" Dimensions="93" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Engineering value = Set_Raw / Set_Div. Lists show the row number.]]></Description>
+<Comments>
+<Comment Operand="[0]"><![CDATA[AVETIME Average Time]]></Comment>
+<Comment Operand="[1]"><![CDATA[RSTAVG Out of Range]]></Comment>
+<Comment Operand="[2]"><![CDATA[PEAKTIME Peak Hold Delay]]></Comment>
+<Comment Operand="[3]"><![CDATA[HOLDFILT Advanced Filter]]></Comment>
+<Comment Operand="[4]"><![CDATA[PHTIME Peak Hold Time]]></Comment>
+<Comment Operand="[5]"><![CDATA[PHTEMP Peak Hold Temp]]></Comment>
+<Comment Operand="[6]"><![CDATA[VHTIME Valley Hold Time]]></Comment>
+<Comment Operand="[7]"><![CDATA[VHTEMP Valley Hold Temp]]></Comment>
+<Comment Operand="[8]"><![CDATA[TSCALE Temp Scale]]></Comment>
+<Comment Operand="[9]"><![CDATA[PLTWARN Pilot Warn Level]]></Comment>
+<Comment Operand="[10]"><![CDATA[EMISS Emissivity]]></Comment>
+<Comment Operand="[11]"><![CDATA[ESLOPEOF E-Slope Offset]]></Comment>
+<Comment Operand="[12]"><![CDATA[LOWGAIN Low Energy Gain]]></Comment>
+<Comment Operand="[13]"><![CDATA[LOWEN Low Energy Level]]></Comment>
+<Comment Operand="[14]"><![CDATA[INPARAM Input Parameter]]></Comment>
+<Comment Operand="[15]"><![CDATA[INSCALE Input Scale]]></Comment>
+<Comment Operand="[16]"><![CDATA[EXTEMIS Ext Emissivity]]></Comment>
+<Comment Operand="[17]"><![CDATA[OPARAM Output Param]]></Comment>
+<Comment Operand="[18]"><![CDATA[OSCALE Output Scale]]></Comment>
+<Comment Operand="[19]"><![CDATA[O1BOT 0/4mA Temp]]></Comment>
+<Comment Operand="[20]"><![CDATA[O1TOP 20mA Temp]]></Comment>
+<Comment Operand="[21]"><![CDATA[SSSCALE Sig Str Scale]]></Comment>
+<Comment Operand="[22]"><![CDATA[TTLPARAM TTL Alarm Param]]></Comment>
+<Comment Operand="[23]"><![CDATA[TTLLOGIC TTL Alarm Logic]]></Comment>
+<Comment Operand="[24]"><![CDATA[TTLTEMP TTL Alarm Temp]]></Comment>
+<Comment Operand="[25]"><![CDATA[TTLAMB TTL Alarm Ambient]]></Comment>
+<Comment Operand="[26]"><![CDATA[TTLEN TTL Alarm Sig Dil]]></Comment>
+<Comment Operand="[27]"><![CDATA[TTLSIG TTL Alarm Sig Str]]></Comment>
+<Comment Operand="[28]"><![CDATA[TTLCELL TTL Alarm Cell]]></Comment>
+<Comment Operand="[29]"><![CDATA[ESPTABLE Appl Algorithm]]></Comment>
+<Comment Operand="[30]"><![CDATA[ESPSH ESP Sample Hold]]></Comment>
+<Comment Operand="[31]"><![CDATA[SIGSTREN Sig Str Filters]]></Comment>
+<Comment Operand="[32]"><![CDATA[SIGSTRLO Lo Sig Strength]]></Comment>
+<Comment Operand="[33]"><![CDATA[SIGSTRHI Hi Sig Strength]]></Comment>
+<Comment Operand="[34]"><![CDATA[SIGDILEN Sig Dil Filters]]></Comment>
+<Comment Operand="[35]"><![CDATA[SIGDILLO Lo Sig Dilution]]></Comment>
+<Comment Operand="[36]"><![CDATA[SIGDILHI Hi Sig Dilution]]></Comment>
+<Comment Operand="[37]"><![CDATA[SIGSTRAV Sig St Avg Time]]></Comment>
+<Comment Operand="[38]"><![CDATA[SIGDILAV Sig Di Avg Time]]></Comment>
+<Comment Operand="[39]"><![CDATA[SWLMODE Single-Wave Mode]]></Comment>
+<Comment Operand="[40]"><![CDATA[DIAGOUT Out Test]]></Comment>
+<Comment Operand="[41]"><![CDATA[DIAGTTL TTL Test]]></Comment>
+<Comment Operand="[42]"><![CDATA[MENUACC Menu Access]]></Comment>
+<Comment Operand="[43]"><![CDATA[MOTOR Motor Current]]></Comment>
+<Comment Operand="[44]"><![CDATA[CUSTID Customer ID]]></Comment>
+<Comment Operand="[45]"><![CDATA[SENSORID Sensor Type]]></Comment>
+<Comment Operand="[46]"><![CDATA[MODELID Model Number]]></Comment>
+<Comment Operand="[47]"><![CDATA[SERIALID Sensor S/N]]></Comment>
+<Comment Operand="[48]"><![CDATA[TRB Spec Bot Temp]]></Comment>
+<Comment Operand="[49]"><![CDATA[TRT Spec Top Temp]]></Comment>
+<Comment Operand="[50]"><![CDATA[FOV Field of View]]></Comment>
+<Comment Operand="[51]"><![CDATA[DATEMANU Manufacture Date]]></Comment>
+<Comment Operand="[52]"><![CDATA[DATELCAL Last Cal Date]]></Comment>
+<Comment Operand="[53]"><![CDATA[DATENCAL Next Cal Date]]></Comment>
+<Comment Operand="[54]"><![CDATA[DATEWEXP Warranty Exp Date]]></Comment>
+<Comment Operand="[55]"><![CDATA[FIRMVER Sensor Firmware]]></Comment>
+<Comment Operand="[56]"><![CDATA[CALMODE Field Cal]]></Comment>
+<Comment Operand="[57]"><![CDATA[CALBMREF BB Ref Bot]]></Comment>
+<Comment Operand="[58]"><![CDATA[CALBMMEA Measured Bot]]></Comment>
+<Comment Operand="[59]"><![CDATA[CALTPREF BB Ref Top]]></Comment>
+<Comment Operand="[60]"><![CDATA[CALTPMEA Measured Top]]></Comment>
+<Comment Operand="[61]"><![CDATA[AIMMODE Aim Light Mode]]></Comment>
+<Comment Operand="[62]"><![CDATA[AMBLIM Ambient Limit]]></Comment>
+<Comment Operand="[63]"><![CDATA[AMBWARN Ambient Warning]]></Comment>
+<Comment Operand="[64]"><![CDATA[HIGHEN High Energy Level]]></Comment>
+<Comment Operand="[65]"><![CDATA[ESPGAIN ESP Gain (never used)]]></Comment>
+<Comment Operand="[66]"><![CDATA[SPECBOT Spec Bot Temp (factory)]]></Comment>
+<Comment Operand="[67]"><![CDATA[SPECTOP Spec Top Temp (factory)]]></Comment>
+<Comment Operand="[68]"><![CDATA[CALBOT Cal Bot Temp]]></Comment>
+<Comment Operand="[69]"><![CDATA[CALTOP Cal Top Temp]]></Comment>
+<Comment Operand="[70]"><![CDATA[PKTHR Pkhold Thr Temp]]></Comment>
+<Comment Operand="[71]"><![CDATA[4DAC DAC 4mA]]></Comment>
+<Comment Operand="[72]"><![CDATA[20DAC DAC 20mA]]></Comment>
+<Comment Operand="[73]"><![CDATA[DETTEMP Detector Amb]]></Comment>
+<Comment Operand="[74]"><![CDATA[ESPORNG ESP Out Range]]></Comment>
+<Comment Operand="[75]"><![CDATA[COMTYP Comm Type]]></Comment>
+<Comment Operand="[76]"><![CDATA[ANO1 Anull Out1]]></Comment>
+<Comment Operand="[77]"><![CDATA[ANO10 Anull Out10]]></Comment>
+<Comment Operand="[78]"><![CDATA[ANO100 Anull Out100]]></Comment>
+<Comment Operand="[79]"><![CDATA[ANO1000 Anull Out1K]]></Comment>
+<Comment Operand="[80]"><![CDATA[ANS1 Anull Sum1]]></Comment>
+<Comment Operand="[81]"><![CDATA[ANS10 Anull Sum10]]></Comment>
+<Comment Operand="[82]"><![CDATA[ANS100 Anull Sum100]]></Comment>
+<Comment Operand="[83]"><![CDATA[ANS1000 Anull Sum1K]]></Comment>
+<Comment Operand="[84]"><![CDATA[ANGAIN Anull Gain]]></Comment>
+<Comment Operand="[85]"><![CDATA[OFFLMP Offset Lamp]]></Comment>
+<Comment Operand="[86]"><![CDATA[OPT1 OptZero1]]></Comment>
+<Comment Operand="[87]"><![CDATA[OPT10 OptZero 10]]></Comment>
+<Comment Operand="[88]"><![CDATA[OPT100 OptZero 100]]></Comment>
+<Comment Operand="[89]"><![CDATA[OPT1000 OptZero 1000]]></Comment>
+<Comment Operand="[90]"><![CDATA[GAINSEL Gain Select]]></Comment>
+<Comment Operand="[91]"><![CDATA[COMMEN Comm Enable]]></Comment>
+<Comment Operand="[92]"><![CDATA[TPILE Thermopile]]></Comment>
+</Comments>
+<Data Format="L5K"><![CDATA[[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]]]></Data>
+</Tag>
+<Tag Name="Set_Text" TagType="Base" DataType="STRING" Dimensions="93" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Reply text from the sensor (text settings, and raw reply for all).]]></Description>
+<Data Format="L5K"><![CDATA[[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]]></Data>
+</Tag>
+<Tag Name="Set_Status" TagType="Base" DataType="DINT" Dimensions="93" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[0 not read, 1 read OK, 2 reply not numeric (text kept in Set_Text), 3 blank reply (not supported).]]></Description>
+<Data Format="L5K"><![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Set_Edit_Index" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: which setting to change (0-92).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Set_Edit_Value" TagType="Base" DataType="REAL" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: new value in engineering units (lists: row number).]]></Description>
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Set_Edit_Text" TagType="Base" DataType="STRING" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: new value for text settings.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Set_Edit_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: write the setting. Runs once per press.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Edit_Status" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[0 idle, 1 busy, 2 written and verified, 3 rejected (bad index or out of range), 4 read only, 5 verify failed (read-back differs), 6 comm fault.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Read_All_Request" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: read every setting from the sensor again. Runs once per press. Also runs at power-up.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Read_All_Busy" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Status: settings are being read.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Read_All_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Status: all settings read since power-up or the last request.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Pyro_Comm_Alarm" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Summary: comm fault, no measured reply, or PLX config error.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Revision" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Program revision.]]></Description>
+<Data Format="L5K"><![CDATA[[4,'V1.0$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_AutoOff" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Stops the sensor's continuous data stream.]]></Description>
+<Data Format="L5K"><![CDATA[[8,'AUTO OFF$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Set" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Write prefix: Set NAME=value. HyperTerminal examples use Set_ - change here if needed.]]></Description>
+<Data Format="L5K"><![CDATA[[4,'Set $00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Get" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Read prefix: Get NAME.]]></Description>
+<Data Format="L5K"><![CDATA[[4,'Get $00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Equal" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - used to parse replies.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'=$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Comma" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - used to parse replies.]]></Description>
+<Data Format="L5K"><![CDATA[[1,',$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_CRLF" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Commands end with CR LF.]]></Description>
+<Data Format="L5K"><![CDATA[[2,'$0D$0A$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_CR" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - used to parse replies.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'$0D$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_LF" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Replies end with LF CR.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'$0A$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Auto" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Start of a streaming line - rejected.]]></Description>
+<Data Format="L5K"><![CDATA[[5,'AUTO=$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Meas_Cmd" TagType="Base" DataType="STRING" Dimensions="14" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Willybus command for each measured value.]]></Description>
+<Data Format="L5K"><![CDATA[[[2,'UT$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'FT$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'FL$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'AT$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'SS$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'SD$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'SE$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'US$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'FS$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'RA$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'CS$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'RC$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'UP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[2,'FP$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]]></Data>
+</Tag>
+<Tag Name="Comm_Step" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Comm handler step: 0 idle, 2 build poll line, 5 build, 6 pre-read, 10 send, 20/22/25 wait reply, 26-27 extract, 50 parse values, 60 parse setting, 30 done/gap, 90 fault.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Cmd_Code" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 AUTO OFF, 2 Set, 3 Get (edit verify), 4 Poll, 5 Get (read all). 3 and up expect a reply.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Tx_MSG" TagType="Base" DataType="MESSAGE" ExternalAccess="Read/Write">
+<Description><![CDATA[The ONLY transmit MSG. Writes Tx_Buf to PLX port 1 transmit block (SintData[4000] = Tx DB Start 2000).]]></Description>
+<Data Format="Message"><MessageParameters MessageType="CIP Data Table Write" RemoteElement="SintData[4000]" RequestedLength="80" ConnectedFlag="2" ConnectionPath="Prosoft_Pyro" CommTypeCode="0" LocalIndex="0" LocalElement="Tx_Buf[0]"/></Data>
+</Tag>
+<Tag Name="Rx_MSG" TagType="Base" DataType="MESSAGE" ExternalAccess="Read/Write">
+<Description><![CDATA[The ONLY receive MSG. Reads PLX port 1 receive block (SintData[0] = Rx DB Start 0) into Rx_Buf.]]></Description>
+<Data Format="Message"><MessageParameters MessageType="CIP Data Table Read" RemoteElement="SintData[0]" RequestedLength="160" ConnectedFlag="2" ConnectionPath="Prosoft_Pyro" CommTypeCode="0" LocalIndex="0" LocalElement="Rx_Buf[0]"/></Data>
+</Tag>
+<Tag Name="Tx_Buf" TagType="Base" DataType="SINT" Dimensions="80" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[PLX transmit block: [0..1] sequence no, [6..7] length, [8..] text.]]></Description>
+<Data Format="L5K"><![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Rx_Buf" TagType="Base" DataType="SINT" Dimensions="160" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[PLX receive block: [0..1] rx seq, [4..5] rx count, [6..7] rx state, [12..13] tx state, [16..17] config error, [18..] text.]]></Description>
+<Data Format="L5K"><![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Tx_Seq" TagType="Base" DataType="SINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[PLX transmit sequence number, 1-100, changed every message.]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Tx_Str" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Command text before CR LF.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Tx_Work" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Scratch string.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Tx_Work2" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Scratch string.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Tx_Line" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Command with CR LF.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Rx_Seq" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Receive sequence number from the latest read.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Rx_Seq_Last" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Receive sequence number saved before a request.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Rx_Count" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Characters in the last received message.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Rx_Len" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Working copy of Rx_Count.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Rx_Start" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Rx_Buf index where text starts.]]></Description>
+<Data Format="L5K"><![CDATA[18]]></Data>
+</Tag>
+<Tag Name="Rx_Text" TagType="Base" DataType="STRING_200" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Reply text with LF/CR removed (up to 200 chars).]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Rx_CR_Pos" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Rx_LF_Pos" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Rx_Auto_Pos" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Rx_Reject_Count" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Diagnostic: replies thrown away (wrong format, wrong field count, stream line).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Rx_Retry_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Pause between reads while waiting for a reply.]]></Description>
+<Data Format="L5K"><![CDATA[[0,20,0]]]></Data>
+</Tag>
+<Tag Name="Comm_Watchdog" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Max time for one message. Done = timeout fault.]]></Description>
+<Data Format="L5K"><![CDATA[[0,3000,0]]]></Data>
+</Tag>
+<Tag Name="Comm_Gap_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Gap between messages.]]></Description>
+<Data Format="L5K"><![CDATA[[0,50,0]]]></Data>
+</Tag>
+<Tag Name="Comm_Retry_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Wait after a fault before trying again.]]></Description>
+<Data Format="L5K"><![CDATA[[0,5000,0]]]></Data>
+</Tag>
+<Tag Name="Comm_Fault" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Alarm: last message failed. Clears on the next success.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Fault_Count" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Err_Source" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 transmit MSG error, 2 receive MSG error, 3 timeout / no valid reply, 5 message too long.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Err_Code" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[MSG .ERR code.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Err_ExCode" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[MSG .EXERR code.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Err_Step" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Err_Cmd" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="PLX_Rx_State" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="PLX_Tx_State" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="PLX_Config_Error" TagType="Base" DataType="INT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[PLX port configuration error code, 0 = OK.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="PLX_Config_Fault" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="AutoOff_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Request to the comm handler.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="AutoOff_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Comm handler: request delivered (true during the gap).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Set_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Request to the comm handler.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Set_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Comm handler: request delivered (true during the gap).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Get_Edit_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Request to the comm handler.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Get_Edit_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Comm handler: request delivered (true during the gap).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Poll_Cmd_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Request to the comm handler.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Poll_Cmd_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Comm handler: request delivered (true during the gap).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Get_All_Req" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Request to the comm handler.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Get_All_Done" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Comm handler: request delivered (true during the gap).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Poll_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Poll interval.]]></Description>
+<Data Format="L5K"><![CDATA[[0,1000,0]]]></Data>
+</Tag>
+<Tag Name="Poll_Overrun_Count" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Diagnostic: poll interval came round while the last poll was still waiting.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Meas_Count" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Number of values in the current poll line.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Meas_Order" TagType="Base" DataType="DINT" Dimensions="14" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Which value is at each position of the poll line.]]></Description>
+<Data Format="L5K"><![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Meas_Stage_Val" TagType="Base" DataType="REAL" Dimensions="14" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Values parsed from a reply, copied to Meas_Value only if the whole reply is good.]]></Description>
+<Data Format="L5K"><![CDATA[[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]]]></Data>
+</Tag>
+<Tag Name="Meas_Stage_Stat" TagType="Base" DataType="DINT" Dimensions="14" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Status parsed from a reply.]]></Description>
+<Data Format="L5K"><![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Meas_Reply_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Time since the last good poll reply.]]></Description>
+<Data Format="L5K"><![CDATA[[0,5000,0]]]></Data>
+</Tag>
+<Tag Name="Meas_No_Response" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Alarm: polling on but no good reply in 5 s. Values are stale.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fld_Start" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Fld_Comma" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fld_Qty" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fld_Item" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fld_Text" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[One field of the poll reply.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Parse_Bad" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 = poll reply did not match the request.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="ROC_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Time between good polls, for rate of change.]]></Description>
+<Data Format="L5K"><![CDATA[[0,600000,0]]]></Data>
+</Tag>
+<Tag Name="ROC_FT_Prev" TagType="Base" DataType="REAL" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="ROC_Prev_OK" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="ROC_Delta" TagType="Base" DataType="REAL" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="ROC_Elapsed" TagType="Base" DataType="REAL" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Get_Target" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Setting index of the Get being handled.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Get_Text" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Value part of a Get reply.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Get_Work" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Scratch string.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Get_Eq_Pos" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Get_Comma_Pos" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Get_Qty" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Get_Real" TagType="Base" DataType="REAL" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Edit_SEQ" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Setting write: 5 check, 10 Set, 20 wait 400 ms, 30 Get, 40 verify, 100 wait for request release.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Edit_Idx" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Setting index captured when the write started.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Edit_Raw" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Raw value being written.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Edit_Raw_Real" TagType="Base" DataType="REAL" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Edit_Div_Real" TagType="Base" DataType="REAL" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[1.0]]></Data>
+</Tag>
+<Tag Name="Edit_Min" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Edit_Max" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Edit_Value_Str" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Value text sent after Set NAME=.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Edit_Settle_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Wait after Set before reading back (sensor applies settings within 300 ms).]]></Description>
+<Data Format="L5K"><![CDATA[[0,400,0]]]></Data>
+</Tag>
+<Tag Name="ReadAll_SEQ" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Read all: 10 AUTO OFF, 20 Get, 25 next, 100 done (wait for request release).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Read_All_Index" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Setting being read.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+</Tags>
+<Routines>
+<Routine Name="PYRO_DISPATCH" Type="RLL">
+<Description><![CDATA[Main routine. Williamson Gold/Pro pyrometer, stand-alone (no Interface Module), RS-485 full duplex through PLX31-EIP-ASCII4 port 1. Calls the four routines in a fixed order.]]></Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment><![CDATA[First scan: reset the state machines and start the power-up sequence (AUTO OFF, then read every setting). S:FS is the controller first-scan bit.]]></Comment>
+<Text><![CDATA[XIC(S:FS)[MOV(0,Comm_Step) ,MOV(0,Edit_SEQ) ,MOV(10,ReadAll_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment><![CDATA[1) Sequences decide WHAT to send: 1 s poll, setting writes, read all.]]></Comment>
+<Text><![CDATA[JSR(PYRO_Sequences,0);]]></Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment><![CDATA[2) Comm handler: the only code that uses Tx_MSG / Rx_MSG. One message at a time.]]></Comment>
+<Text><![CDATA[JSR(PYRO_Comm_Handler,0);]]></Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment><![CDATA[3) Reply parse: checks each reply and turns it into values.]]></Comment>
+<Text><![CDATA[JSR(PYRO_Reply_Parse,0);]]></Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment><![CDATA[4) Status and alarms: temperature status bits, ambient warning, PLC alarms 1 and 2.]]></Comment>
+<Text><![CDATA[JSR(PYRO_Status_Alarms,0);]]></Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="PYRO_Sequences" Type="RLL">
+<Description><![CDATA[Poll timer, setting writes and read-all. Nothing here sends a message: each step turns on a *_Req bit and moves on when the matching *_Done bit comes back.]]></Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment><![CDATA[POLL TIMER. Self-resetting: DN is on for exactly one scan every 1 s (no ONS needed).]]></Comment>
+<Text><![CDATA[XIC(Poll_Enable)XIO(Poll_Timer.DN)TON(Poll_Timer,?,?);]]></Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment><![CDATA[Diagnostic: the next poll came round while the last one was still waiting (polling slower than 1 s).]]></Comment>
+<Text><![CDATA[XIC(Poll_Timer.DN)XIC(Poll_Cmd_Req)ADD(Poll_Overrun_Count,1,Poll_Overrun_Count);]]></Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment><![CDATA[POLL REQUEST. On at each timer pulse, held until the comm handler says the poll is done (seal-in).]]></Comment>
+<Text><![CDATA[[XIC(Poll_Timer.DN) ,XIC(Poll_Cmd_Req) XIO(Poll_Cmd_Done) ]XIC(Poll_Enable)OTE(Poll_Cmd_Req);]]></Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment><![CDATA[READ ALL SETTINGS. Starts at power-up (S:FS sets step 10) or when Read_All_Request is pressed while idle.]]></Comment>
+<Text><![CDATA[XIC(Read_All_Request)[EQU(ReadAll_SEQ,0) ,EQU(ReadAll_SEQ,100) ]XIO(Read_All_Busy)MOV(10,ReadAll_SEQ);]]></Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment><![CDATA[Step 10: AUTO OFF delivered (stops any data stream that would block commands) -> start at setting 0.]]></Comment>
+<Text><![CDATA[EQU(ReadAll_SEQ,10)XIC(AutoOff_Cmd_Done)[MOV(0,Read_All_Index) ,MOV(20,ReadAll_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment><![CDATA[Step 20: one setting read -> next index. The ADD runs once because the step changes in the same rung.]]></Comment>
+<Text><![CDATA[EQU(ReadAll_SEQ,20)XIC(Get_All_Done)[ADD(Read_All_Index,1,Read_All_Index) ,MOV(25,ReadAll_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Comment><![CDATA[Step 25: wait for the done bit to drop (it stays on during the 50 ms gap), then read the next one or finish.]]></Comment>
+<Text><![CDATA[EQU(ReadAll_SEQ,25)XIO(Get_All_Done)[LES(Read_All_Index,93) MOV(20,ReadAll_SEQ) ,GEQ(Read_All_Index,93) MOV(100,ReadAll_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Text><![CDATA[LIM(10,ReadAll_SEQ,25)OTE(Read_All_Busy);]]></Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Comment><![CDATA[Status bits. Read_All_Done must stay ABOVE the step-100 rung so it sees step 100 before the sequence returns to 0; then it seals in.]]></Comment>
+<Text><![CDATA[[EQU(ReadAll_SEQ,100) ,EQU(ReadAll_SEQ,0) XIC(Read_All_Done) ]OTE(Read_All_Done);]]></Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Comment><![CDATA[Step 100: done. Back to 0 once the request is released, so one press reads once.]]></Comment>
+<Text><![CDATA[EQU(ReadAll_SEQ,100)XIO(Read_All_Request)MOV(0,ReadAll_SEQ);]]></Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Comment><![CDATA[WRITE A SETTING (replaces the IM edit keys). Step 0 -> 5 when the HMI presses Set_Edit_Request.]]></Comment>
+<Text><![CDATA[XIC(Set_Edit_Request)EQU(Edit_SEQ,0)MOV(5,Edit_SEQ);]]></Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Comment><![CDATA[Step 5: busy, and capture the index so the HMI can't change it mid-write.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,5)[MOV(1,Edit_Status) ,MOV(Set_Edit_Index,Edit_Idx) ];]]></Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Comment><![CDATA[Bad index -> rejected.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,5)[LES(Edit_Idx,0) ,GRT(Edit_Idx,92) ][MOV(3,Edit_Status) ,MOV(100,Edit_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Comment><![CDATA[Read-only setting -> rejected.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,5)LIM(0,Edit_Idx,92)EQU(Set_Access[Edit_Idx],1)[MOV(4,Edit_Status) ,MOV(100,Edit_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment><![CDATA[Text setting: length must fit the sensor field.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,5)LIM(0,Edit_Idx,92)EQU(Set_Type[Edit_Idx],2)LEQ(Set_Edit_Text.LEN,Set_Max[Edit_Idx])[COP(Set_Edit_Text,Edit_Value_Str,1) ,MOV(10,Edit_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Comment><![CDATA[Number / list / temperature: raw = value x divisor (MOV REAL to DINT rounds). Temperatures are limited to the sensor's own range (TRB..TRT) once those have been read.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,5)LIM(0,Edit_Idx,92)NEQ(Set_Type[Edit_Idx],2)LIM(-100000000.0,Set_Edit_Value,100000000.0)[MOV(Set_Div[Edit_Idx],Edit_Div_Real) ,MUL(Set_Edit_Value,Edit_Div_Real,Edit_Raw_Real) ,LIM(-2000000000.0,Edit_Raw_Real,2000000000.0) MOV(Edit_Raw_Real,Edit_Raw) ,MOV(Set_Min[Edit_Idx],Edit_Min) ,MOV(Set_Max[Edit_Idx],Edit_Max) ,EQU(Set_Type[Edit_Idx],3) EQU(Set_Status[48],1) EQU(Set_Status[49],1) MOV(Set_Raw[48],Edit_Min) MOV(Set_Raw[49],Edit_Max) ,LIM(Edit_Min,Edit_Raw,Edit_Max) LIM(-2000000000.0,Edit_Raw_Real,2000000000.0) DTOS(Edit_Raw,Edit_Value_Str) MOV(10,Edit_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Comment><![CDATA[Still at step 5 = value out of range -> rejected.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,5)[MOV(3,Edit_Status) ,MOV(100,Edit_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Comment><![CDATA[Step 10: Set delivered -> step 20.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,10)XIC(Set_Cmd_Done)MOV(20,Edit_SEQ);]]></Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Comment><![CDATA[Step 20: wait 400 ms for the sensor to apply it (manual: 300 ms or less) -> step 30.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,20)[TON(Edit_Settle_Timer,?,?) ,XIC(Edit_Settle_Timer.DN) MOV(30,Edit_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment><![CDATA[Step 30: read-back (Get) delivered -> step 40.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,30)XIC(Get_Edit_Done)MOV(40,Edit_SEQ);]]></Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Comment><![CDATA[Step 40 VERIFY: assume failed ...]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,40)MOV(5,Edit_Status);]]></Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment><![CDATA[... OK if the read-back matches what was written (number, or text for text settings).]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,40)LIM(0,Edit_Idx,92)EQU(Set_Status[Edit_Idx],1)[NEQ(Set_Type[Edit_Idx],2) EQU(Set_Raw[Edit_Idx],Edit_Raw) ,EQU(Set_Type[Edit_Idx],2) EQU(Set_Text[Edit_Idx],Edit_Value_Str) ]MOV(2,Edit_Status);]]></Text>
+</Rung>
+<Rung Number="22" Type="N">
+<Text><![CDATA[EQU(Edit_SEQ,40)MOV(100,Edit_SEQ);]]></Text>
+</Rung>
+<Rung Number="23" Type="N">
+<Comment><![CDATA[Abort on a comm fault.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,90)LIM(10,Edit_SEQ,30)[MOV(6,Edit_Status) ,MOV(100,Edit_SEQ) ];]]></Text>
+</Rung>
+<Rung Number="24" Type="N">
+<Comment><![CDATA[Step 100: wait for request release so one press = one write. Edit_Status keeps the result.]]></Comment>
+<Text><![CDATA[EQU(Edit_SEQ,100)XIO(Set_Edit_Request)MOV(0,Edit_SEQ);]]></Text>
+</Rung>
+<Rung Number="25" Type="N">
+<Comment><![CDATA[REQUEST BITS (one OTE each).]]></Comment>
+<Text><![CDATA[EQU(ReadAll_SEQ,10)OTE(AutoOff_Cmd_Req);]]></Text>
+</Rung>
+<Rung Number="26" Type="N">
+<Text><![CDATA[EQU(ReadAll_SEQ,20)OTE(Get_All_Req);]]></Text>
+</Rung>
+<Rung Number="27" Type="N">
+<Text><![CDATA[EQU(Edit_SEQ,10)OTE(Set_Cmd_Req);]]></Text>
+</Rung>
+<Rung Number="28" Type="N">
+<Text><![CDATA[EQU(Edit_SEQ,30)OTE(Get_Edit_Req);]]></Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="PYRO_Comm_Handler" Type="RLL">
+<Description><![CDATA[Comm handler - the only place Tx_MSG and Rx_MSG are used. Same structure as the MKS program: pick (0) -> build (2/5) -> pre-read (6, requests) -> send (10) -> wait reply (20/22/25) -> parse (26-60) -> gap (30). Faults go to 90.]]></Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment><![CDATA[STEP 0 - PICK A JOB. Rung order = priority: AUTO OFF, Set, Get (verify), Poll, Get (read all). The first rung that moves Comm_Step off 0 blocks the rest.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,0)XIC(AutoOff_Cmd_Req)[MOV(1,Cmd_Code) ,COP(Str_AutoOff,Tx_Str,1) ,MOV(5,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment><![CDATA[Set NAME=value]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,0)XIC(Set_Cmd_Req)LIM(0,Edit_Idx,92)[MOV(2,Cmd_Code) ,CONCAT(Str_Set,Set_Cmd[Edit_Idx],Tx_Work) ,CONCAT(Tx_Work,Str_Equal,Tx_Work2) ,CONCAT(Tx_Work2,Edit_Value_Str,Tx_Str) ,MOV(5,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment><![CDATA[Get NAME (read-back after a write)]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,0)XIC(Get_Edit_Req)LIM(0,Edit_Idx,92)[MOV(3,Cmd_Code) ,MOV(Edit_Idx,Get_Target) ,CONCAT(Str_Get,Set_Cmd[Edit_Idx],Tx_Str) ,MOV(5,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment><![CDATA[Poll: go build the comma-separated line (step 2).]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,0)XIC(Poll_Cmd_Req)[MOV(4,Cmd_Code) ,MOV(0,Tx_Str.LEN) ,MOV(0,Meas_Count) ,MOV(2,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment><![CDATA[Get NAME (read all)]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,0)XIC(Get_All_Req)LIM(0,Read_All_Index,92)[MOV(5,Cmd_Code) ,MOV(Read_All_Index,Get_Target) ,CONCAT(Str_Get,Set_Cmd[Read_All_Index],Tx_Str) ,MOV(5,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment><![CDATA[STEP 2 - BUILD POLL LINE. One rung per value; all run in the same scan. If the value's enable bit is on, add a comma (if not first) and its command, and remember its position.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.0)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[0],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(0,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.1)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[1],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(1,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.2)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[2],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(2,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.3)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[3],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(3,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.4)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[4],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(4,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.5)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[5],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(5,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.6)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[6],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(6,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.7)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[7],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(7,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.8)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[8],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(8,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.9)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[9],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(9,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.10)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[10],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(10,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.11)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[11],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(11,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.12)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[12],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(12,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Text><![CDATA[EQU(Comm_Step,2)XIC(Meas_Enable.13)[GRT(Meas_Count,0) CONCAT(Tx_Str,Str_Comma,Tx_Work) COP(Tx_Work,Tx_Str,1) ,CONCAT(Tx_Str,Meas_Cmd[13],Tx_Work) ,COP(Tx_Work,Tx_Str,1) ,MOV(13,Meas_Order[Meas_Count]) ,ADD(Meas_Count,1,Meas_Count) ];]]></Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment><![CDATA[Nothing enabled -> skip straight to done; otherwise build the PLX block.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,2)[GRT(Meas_Count,0) MOV(5,Comm_Step) ,EQU(Meas_Count,0) MOV(30,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Comment><![CDATA[STEP 5 - BUILD. Add CR LF.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,5)CONCAT(Tx_Str,Str_CRLF,Tx_Line);]]></Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment><![CDATA[Fill the PLX transmit block: new sequence number (the PLX sends when it changes), length, text. Requests (code 3+) pre-read first.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,5)LIM(1,Tx_Line.LEN,70)[ADD(Tx_Seq,1,Tx_Seq) ,GRT(Tx_Seq,100) MOV(1,Tx_Seq) ,MOV(Tx_Seq,Tx_Buf[0]) ,MOV(0,Tx_Buf[1]) ,MOV(Tx_Line.LEN,Tx_Buf[6]) ,MOV(0,Tx_Buf[7]) ,COP(Tx_Line.DATA[0],Tx_Buf[8],Tx_Line.LEN) ,GEQ(Cmd_Code,3) MOV(6,Comm_Step) ,LES(Cmd_Code,3) MOV(10,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="22" Type="N">
+<Comment><![CDATA[Still at 5 = too long - fault.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,5)[MOV(5,Comm_Err_Source) ,MOV(Comm_Step,Comm_Err_Step) ,MOV(Cmd_Code,Comm_Err_Cmd) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(90,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="23" Type="N">
+<Comment><![CDATA[RECEIVE MSG - the only MSG for Rx_MSG (pre-read at 6, reply read at 20).]]></Comment>
+<Text><![CDATA[[EQU(Comm_Step,6) ,EQU(Comm_Step,20) ]MSG(Rx_MSG);]]></Text>
+</Rung>
+<Rung Number="24" Type="N">
+<Comment><![CDATA[Every read updates the PLX port status.]]></Comment>
+<Text><![CDATA[XIC(Rx_MSG.DN)[COP(Rx_Buf[6],PLX_Rx_State,1) ,COP(Rx_Buf[12],PLX_Tx_State,1) ,COP(Rx_Buf[16],PLX_Config_Error,1) ];]]></Text>
+</Rung>
+<Rung Number="25" Type="N">
+<Comment><![CDATA[STEP 6 - PRE-READ: save the receive sequence number so the reply to THIS request can be recognized.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,6)XIC(Rx_MSG.EN)XIC(Rx_MSG.DN)[COP(Rx_Buf[0],Rx_Seq_Last,1) ,MOV(10,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="26" Type="N">
+<Comment><![CDATA[STEP 10 - SEND. The only MSG for Tx_MSG.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,10)MSG(Tx_MSG);]]></Text>
+</Rung>
+<Rung Number="27" Type="N">
+<Comment><![CDATA[Sent. Requests wait for a reply (20); commands go to done (30).]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,10)XIC(Tx_MSG.EN)XIC(Tx_MSG.DN)[GEQ(Cmd_Code,3) MOV(20,Comm_Step) ,LES(Cmd_Code,3) MOV(30,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="28" Type="N">
+<Comment><![CDATA[STEP 20 - read done. EN is checked with DN because DN stays on after the rung goes false.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,20)XIC(Rx_MSG.EN)XIC(Rx_MSG.DN)MOV(25,Comm_Step);]]></Text>
+</Rung>
+<Rung Number="29" Type="N">
+<Comment><![CDATA[STEP 25 - same sequence number = no reply yet (22). New number = new reply (26).]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,25)[COP(Rx_Buf[0],Rx_Seq,1) ,EQU(Rx_Seq,Rx_Seq_Last) MOV(22,Comm_Step) ,NEQ(Rx_Seq,Rx_Seq_Last) MOV(Rx_Seq,Rx_Seq_Last) MOV(26,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="30" Type="N">
+<Comment><![CDATA[STEP 22 - 20 ms pause so the receive MSG rung is false for at least one scan before reading again.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,22)[TON(Rx_Retry_Timer,?,?) ,XIC(Rx_Retry_Timer.DN) MOV(20,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="31" Type="N">
+<Comment><![CDATA[WATCHDOG: times each message from build to parse. Step 30 (the gap) is left out so the timer resets between back-to-back messages. Must stay above the fault rungs.]]></Comment>
+<Text><![CDATA[[LIM(2,Comm_Step,29) ,LIM(31,Comm_Step,79) ]TON(Comm_Watchdog,?,?);]]></Text>
+</Rung>
+<Rung Number="32" Type="N">
+<Comment><![CDATA[FAULT: timeout.]]></Comment>
+<Text><![CDATA[XIC(Comm_Watchdog.DN)[MOV(3,Comm_Err_Source) ,MOV(0,Comm_Err_Code) ,MOV(0,Comm_Err_ExCode) ,MOV(Comm_Step,Comm_Err_Step) ,MOV(Cmd_Code,Comm_Err_Cmd) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(90,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="33" Type="N">
+<Comment><![CDATA[FAULT: transmit MSG error.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,10)XIC(Tx_MSG.ER)[MOV(1,Comm_Err_Source) ,MOV(Tx_MSG.ERR,Comm_Err_Code) ,MOV(Tx_MSG.EXERR,Comm_Err_ExCode) ,MOV(Comm_Step,Comm_Err_Step) ,MOV(Cmd_Code,Comm_Err_Cmd) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(90,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="34" Type="N">
+<Comment><![CDATA[FAULT: receive MSG error.]]></Comment>
+<Text><![CDATA[[EQU(Comm_Step,6) ,EQU(Comm_Step,20) ]XIC(Rx_MSG.ER)[MOV(2,Comm_Err_Source) ,MOV(Rx_MSG.ERR,Comm_Err_Code) ,MOV(Rx_MSG.EXERR,Comm_Err_ExCode) ,MOV(Comm_Step,Comm_Err_Step) ,MOV(Cmd_Code,Comm_Err_Cmd) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(90,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="35" Type="N">
+<Comment><![CDATA[STEP 30 - DONE. 50 ms gap, then idle.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,30)[TON(Comm_Gap_Timer,?,?) ,XIC(Comm_Gap_Timer.DN) MOV(0,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="36" Type="N">
+<Comment><![CDATA[STEP 90 - FAULT. Wait 5 s, then idle. Requests still on are retried.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,90)[TON(Comm_Retry_Timer,?,?) ,XIC(Comm_Retry_Timer.DN) MOV(0,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="37" Type="N">
+<Comment><![CDATA[Comm fault alarm: on at step 90 until a message succeeds (seal-in).]]></Comment>
+<Text><![CDATA[[EQU(Comm_Step,90) ,XIC(Comm_Fault) NEQ(Comm_Step,30) ]OTE(Comm_Fault);]]></Text>
+</Rung>
+<Rung Number="38" Type="N">
+<Comment><![CDATA[DONE BITS.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,1)OTE(AutoOff_Cmd_Done);]]></Text>
+</Rung>
+<Rung Number="39" Type="N">
+<Text><![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,2)OTE(Set_Cmd_Done);]]></Text>
+</Rung>
+<Rung Number="40" Type="N">
+<Text><![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,3)OTE(Get_Edit_Done);]]></Text>
+</Rung>
+<Rung Number="41" Type="N">
+<Text><![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,4)OTE(Poll_Cmd_Done);]]></Text>
+</Rung>
+<Rung Number="42" Type="N">
+<Text><![CDATA[EQU(Comm_Step,30)EQU(Cmd_Code,5)OTE(Get_All_Done);]]></Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="PYRO_Reply_Parse" Type="RLL">
+<Description><![CDATA[Reply parse (comm handler steps 26-60). Each reply is checked against what was asked; anything that doesn't match is counted in Rx_Reject_Count and the handler keeps waiting until the watchdog.]]></Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment><![CDATA[STEP 26 - received character count; skip a leading LF.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,26)[COP(Rx_Buf[4],Rx_Count,1) ,MOV(Rx_Count,Rx_Len) ,MOV(18,Rx_Start) ,EQU(Rx_Buf[18],10) MOV(19,Rx_Start) SUB(Rx_Len,1,Rx_Len) ];]]></Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment><![CDATA[Copy into Rx_Text, then cut at the first CR and the first LF (replies end with LF CR). LIM protects Rx_Buf.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,26)LIM(1,Rx_Len,140)[MOV(Rx_Len,Rx_Text.LEN) ,COP(Rx_Buf[Rx_Start],Rx_Text.DATA[0],Rx_Len) ,FIND(Rx_Text,Str_CR,1,Rx_CR_Pos) ,GRT(Rx_CR_Pos,0) SUB(Rx_CR_Pos,1,Rx_Text.LEN) ,MOV(0,Rx_LF_Pos) ,GEQ(Rx_Text.LEN,1) FIND(Rx_Text,Str_LF,1,Rx_LF_Pos) ,GRT(Rx_LF_Pos,0) SUB(Rx_LF_Pos,1,Rx_Text.LEN) ,MOV(27,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment><![CDATA[Bad length - reject and keep waiting.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,26)[ADD(Rx_Reject_Count,1,Rx_Reject_Count) ,MOV(22,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment><![CDATA[STEP 27 - a streaming line (AUTO=...) is never a reply - reject.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,27)[MOV(0,Rx_Auto_Pos) ,GEQ(Rx_Text.LEN,1) FIND(Rx_Text,Str_Auto,1,Rx_Auto_Pos) ,GRT(Rx_Auto_Pos,0) ADD(Rx_Reject_Count,1,Rx_Reject_Count) MOV(22,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment><![CDATA[Poll reply -> step 50. Get reply -> step 60.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,27)[EQU(Cmd_Code,4) MOV(50,Comm_Step) ,EQU(Cmd_Code,3) MOV(60,Comm_Step) ,EQU(Cmd_Code,5) MOV(60,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Text><![CDATA[EQU(Comm_Step,27)[ADD(Rx_Reject_Count,1,Rx_Reject_Count) ,MOV(22,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Comment><![CDATA[STEP 50 - PARSE POLL REPLY, e.g. '1234.56,1180.20,084.5,00'. Start: keep old values, clear status, field 1 starts at character 1.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,50)[MOV(1,Fld_Start) ,MOV(0,Parse_Bad) ,COP(Meas_Value[0],Meas_Stage_Val[0],14) ,FLL(0,Meas_Stage_Stat[0],14) ];]]></Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Comment><![CDATA[One rung per field position; all run in the same scan. Find the next comma, take the text before it, convert it. A blank field = not supported (status 2). The last field must have no comma after it, every other field must.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,0)[MOV(Meas_Order[0],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,1) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,1) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,1)[MOV(Meas_Order[1],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,2) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,2) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,2)[MOV(Meas_Order[2],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,3) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,3) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,3)[MOV(Meas_Order[3],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,4) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,4) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,4)[MOV(Meas_Order[4],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,5) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,5) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,5)[MOV(Meas_Order[5],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,6) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,6) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,6)[MOV(Meas_Order[6],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,7) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,7) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,7)[MOV(Meas_Order[7],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,8) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,8) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,8)[MOV(Meas_Order[8],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,9) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,9) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,9)[MOV(Meas_Order[9],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,10) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,10) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,10)[MOV(Meas_Order[10],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,11) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,11) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,11)[MOV(Meas_Order[11],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,12) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,12) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,12)[MOV(Meas_Order[12],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,13) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,13) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Text><![CDATA[EQU(Comm_Step,50)GRT(Meas_Count,13)[MOV(Meas_Order[13],Fld_Item) ,MOV(0,Fld_Comma) ,LEQ(Fld_Start,Rx_Text.LEN) FIND(Rx_Text,Str_Comma,Fld_Start,Fld_Comma) ,GRT(Fld_Comma,0) SUB(Fld_Comma,Fld_Start,Fld_Qty) ,EQU(Fld_Comma,0) SUB(Rx_Text.LEN,Fld_Start,Fld_Qty) ADD(Fld_Qty,1,Fld_Qty) ,NEQ(Meas_Count,14) EQU(Fld_Comma,0) MOV(1,Parse_Bad) ,EQU(Meas_Count,14) GRT(Fld_Comma,0) MOV(1,Parse_Bad) ,GRT(Fld_Qty,20) MOV(1,Parse_Bad) ,LIM(1,Fld_Qty,20) MID(Rx_Text,Fld_Qty,Fld_Start,Fld_Text) STOR(Fld_Text,Meas_Stage_Val[Fld_Item]) MOV(1,Meas_Stage_Stat[Fld_Item]) ,LEQ(Fld_Qty,0) MOV(2,Meas_Stage_Stat[Fld_Item]) ,GRT(Fld_Comma,0) ADD(Fld_Comma,1,Fld_Start) ,EQU(Fld_Comma,0) ADD(Rx_Text.LEN,1,Fld_Start) ];]]></Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment><![CDATA[Whole reply good: rate of change from the filtered temperature (degF per second, time measured by ROC_Timer), then copy values and status. RES restarts the timer for the next poll.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,50)EQU(Parse_Bad,0)[EQU(Meas_Stage_Stat[1],1) EQU(ROC_Prev_OK,1) GRT(ROC_Timer.ACC,0) SUB(Meas_Stage_Val[1],ROC_FT_Prev,ROC_Delta) ABS(ROC_Delta,ROC_Delta) MUL(ROC_Delta,1000.0,ROC_Delta) MOV(ROC_Timer.ACC,ROC_Elapsed) DIV(ROC_Delta,ROC_Elapsed,ROC_Value) ,EQU(Meas_Stage_Stat[1],1) MOV(Meas_Stage_Val[1],ROC_FT_Prev) MOV(1,ROC_Prev_OK) ,NEQ(Meas_Stage_Stat[1],1) MOV(0,ROC_Prev_OK) MOV(0.0,ROC_Value) ,RES(ROC_Timer) ,COP(Meas_Stage_Val[0],Meas_Value[0],14) ,COP(Meas_Stage_Stat[0],Meas_Status[0],14) ,MOV(30,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="22" Type="N">
+<Comment><![CDATA[Reply did not match the poll line - reject and keep waiting.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,50)[ADD(Rx_Reject_Count,1,Rx_Reject_Count) ,MOV(22,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="23" Type="N">
+<Comment><![CDATA[STEP 60 - PARSE GET REPLY. Value = text after '=' if there is one, otherwise the whole reply.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,60)[MOV(0,Get_Text.LEN) ,MOV(0,Get_Eq_Pos) ,GEQ(Rx_Text.LEN,1) FIND(Rx_Text,Str_Equal,1,Get_Eq_Pos) ,GRT(Get_Eq_Pos,0) SUB(Rx_Text.LEN,Get_Eq_Pos,Get_Qty) LIM(1,Get_Qty,80) ADD(Get_Eq_Pos,1,Get_Eq_Pos) MID(Rx_Text,Get_Qty,Get_Eq_Pos,Get_Text) ,EQU(Get_Eq_Pos,0) LIM(1,Rx_Text.LEN,80) MID(Rx_Text,Rx_Text.LEN,1,Get_Text) ];]]></Text>
+</Rung>
+<Rung Number="24" Type="N">
+<Comment><![CDATA[Remove up to two leading spaces.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,60)GEQ(Get_Text.LEN,1)EQU(Get_Text.DATA[0],32)[DELETE(Get_Text,1,1,Get_Work) ,COP(Get_Work,Get_Text,1) ];]]></Text>
+</Rung>
+<Rung Number="25" Type="N">
+<Text><![CDATA[EQU(Comm_Step,60)GEQ(Get_Text.LEN,1)EQU(Get_Text.DATA[0],32)[DELETE(Get_Text,1,1,Get_Work) ,COP(Get_Work,Get_Text,1) ];]]></Text>
+</Rung>
+<Rung Number="26" Type="N">
+<Comment><![CDATA[A poll reply (has a comma) arriving for a non-text setting is not ours - reject.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,60)LIM(0,Get_Target,92)NEQ(Set_Type[Get_Target],2)[MOV(0,Get_Comma_Pos) ,GEQ(Get_Text.LEN,1) FIND(Get_Text,Str_Comma,1,Get_Comma_Pos) ,GRT(Get_Comma_Pos,0) ADD(Rx_Reject_Count,1,Rx_Reject_Count) MOV(22,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="27" Type="N">
+<Comment><![CDATA[Store: text always. Text settings: OK (1), even if blank. Others: blank = not supported (3), starts with a digit or '-' = number (1), anything else = not numeric (2). Engineering value = raw / divisor.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,60)LIM(0,Get_Target,92)[COP(Get_Text,Set_Text[Get_Target],1) ,NEQ(Set_Type[Get_Target],2) EQU(Get_Text.LEN,0) MOV(3,Set_Status[Get_Target]) ,NEQ(Set_Type[Get_Target],2) GEQ(Get_Text.LEN,1) MOV(2,Set_Status[Get_Target]) ,EQU(Set_Type[Get_Target],2) MOV(1,Set_Status[Get_Target]) ,GEQ(Get_Text.LEN,1) NEQ(Set_Type[Get_Target],2) [LIM(48,Get_Text.DATA[0],57) ,EQU(Get_Text.DATA[0],45) ] STOD(Get_Text,Set_Raw[Get_Target]) MOV(1,Set_Status[Get_Target]) MOV(Set_Raw[Get_Target],Get_Real) NEQ(Set_Div[Get_Target],0) DIV(Get_Real,Set_Div[Get_Target],Set_Eng[Get_Target]) ,MOV(30,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="28" Type="N">
+<Comment><![CDATA[Bad index (should never happen) - reject.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,60)[ADD(Rx_Reject_Count,1,Rx_Reject_Count) ,MOV(22,Comm_Step) ];]]></Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="PYRO_Status_Alarms" Type="RLL">
+<Description><![CDATA[Status and alarms: temperature status flags, ambient warning, comm alarms, and the two IM-style alarms done in the PLC.]]></Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment><![CDATA[Named copies of the main values.]]></Comment>
+<Text><![CDATA[[MOV(Meas_Value[0],Pyro_Unfiltered_Temp) ,MOV(Meas_Value[1],Pyro_Filtered_Temp) ,MOV(Meas_Value[3],Pyro_Ambient_Temp) ];]]></Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment><![CDATA[Temperature status code (FL). -1 when FL isn't being polled.]]></Comment>
+<Text><![CDATA[[EQU(Meas_Status[2],1) MOV(Meas_Value[2],Pyro_Temp_Status) ,NEQ(Meas_Status[2],1) MOV(-1,Pyro_Temp_Status) ];]]></Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment><![CDATA[TEMPERATURE STATUS FLAGS (page 5). Each code has a second value 16 higher when ESP sample and hold is enabled.]]></Comment>
+<Text><![CDATA[[EQU(Pyro_Temp_Status,0) ,EQU(Pyro_Temp_Status,16) ]OTE(Pyro_Temp_Valid);]]></Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Text><![CDATA[[EQU(Pyro_Temp_Status,3) ,EQU(Pyro_Temp_Status,19) ]OTE(Pyro_Below_Range);]]></Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Text><![CDATA[[EQU(Pyro_Temp_Status,4) ,EQU(Pyro_Temp_Status,20) ]OTE(Pyro_Above_Range);]]></Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Text><![CDATA[[EQU(Pyro_Temp_Status,5) ,EQU(Pyro_Temp_Status,21) ]OTE(Pyro_Low_Energy);]]></Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Text><![CDATA[[EQU(Pyro_Temp_Status,7) ,EQU(Pyro_Temp_Status,23) ]OTE(Pyro_Sig_Str_Low);]]></Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Text><![CDATA[[EQU(Pyro_Temp_Status,8) ,EQU(Pyro_Temp_Status,24) ]OTE(Pyro_Sig_Str_High);]]></Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Text><![CDATA[[EQU(Pyro_Temp_Status,9) ,EQU(Pyro_Temp_Status,25) ]OTE(Pyro_Sig_Dil_Low);]]></Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Text><![CDATA[[EQU(Pyro_Temp_Status,10) ,EQU(Pyro_Temp_Status,26) ]OTE(Pyro_Sig_Dil_High);]]></Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Text><![CDATA[LIM(16,Pyro_Temp_Status,26)OTE(Pyro_ESP_Hold);]]></Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Text><![CDATA[[XIC(Pyro_Below_Range) ,XIC(Pyro_Above_Range) ]OTE(Pyro_Out_Of_Range);]]></Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Comment><![CDATA[AMBIENT WARNING like the IM: ambient temp above the sensor's Ambient Limit (AMBLIM, read from the sensor).]]></Comment>
+<Text><![CDATA[EQU(Meas_Status[3],1)EQU(Set_Status[62],1)GRT(Meas_Value[3],Set_Eng[62])OTE(Pyro_Ambient_Warning);]]></Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Comment><![CDATA[Rate-of-change timer (reset by the parse after each good poll).]]></Comment>
+<Text><![CDATA[XIC(Poll_Enable)TON(ROC_Timer,?,?);]]></Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment><![CDATA[NO RESPONSE: polling on but no good poll reply for 5 s.]]></Comment>
+<Text><![CDATA[XIC(Poll_Enable)[NEQ(Comm_Step,30) ,NEQ(Cmd_Code,4) ]TON(Meas_Reply_Timer,?,?);]]></Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Text><![CDATA[XIC(Meas_Reply_Timer.DN)OTE(Meas_No_Response);]]></Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Text><![CDATA[NEQ(PLX_Config_Error,0)OTE(PLX_Config_Fault);]]></Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Text><![CDATA[[XIC(Comm_Fault) ,XIC(Meas_No_Response) ,XIC(PLX_Config_Fault) ]OTE(Pyro_Comm_Alarm);]]></Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Comment><![CDATA[PLC ALARM 1 - replaces IM Alarm 1 (the IM stores its alarms, so without an IM the PLC does it). Stale data counts as an alarm (failsafe).]]></Comment>
+<Text><![CDATA[[EQU(Alarm1_Param,1) EQU(Meas_Status[1],1) GRT(Meas_Value[1],Alarm1_SP) ,EQU(Alarm1_Param,2) XIC(Pyro_Out_Of_Range) ,EQU(Alarm1_Param,3) EQU(Meas_Status[3],1) GRT(Meas_Value[3],Alarm1_SP) ,EQU(Alarm1_Param,4) EQU(Meas_Status[5],1) LES(Meas_Value[5],Alarm1_SP) ,EQU(Alarm1_Param,5) EQU(Meas_Status[4],1) LES(Meas_Value[4],Alarm1_SP) ,EQU(Alarm1_Param,6) XIC(Pyro_ESP_Hold) ,EQU(Alarm1_Param,7) EQU(Meas_Status[10],1) LES(Meas_Value[10],Alarm1_SP) ,EQU(Alarm1_Param,8) GRT(ROC_Value,Alarm1_SP) ,LIM(1,Alarm1_Param,8) XIC(Meas_No_Response) ]OTE(Alarm1_Active);]]></Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment><![CDATA[Failsafe relay bit like the IM: on when enabled and healthy, off in alarm.]]></Comment>
+<Text><![CDATA[LIM(1,Alarm1_Param,8)XIO(Alarm1_Active)OTE(Alarm1_Relay);]]></Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Comment><![CDATA[PLC ALARM 2 - replaces IM Alarm 2 (the IM stores its alarms, so without an IM the PLC does it). Stale data counts as an alarm (failsafe).]]></Comment>
+<Text><![CDATA[[EQU(Alarm2_Param,1) EQU(Meas_Status[1],1) GRT(Meas_Value[1],Alarm2_SP) ,EQU(Alarm2_Param,2) XIC(Pyro_Out_Of_Range) ,EQU(Alarm2_Param,3) EQU(Meas_Status[3],1) GRT(Meas_Value[3],Alarm2_SP) ,EQU(Alarm2_Param,4) EQU(Meas_Status[5],1) LES(Meas_Value[5],Alarm2_SP) ,EQU(Alarm2_Param,5) EQU(Meas_Status[4],1) LES(Meas_Value[4],Alarm2_SP) ,EQU(Alarm2_Param,6) XIC(Pyro_ESP_Hold) ,EQU(Alarm2_Param,7) EQU(Meas_Status[10],1) LES(Meas_Value[10],Alarm2_SP) ,EQU(Alarm2_Param,8) GRT(ROC_Value,Alarm2_SP) ,LIM(1,Alarm2_Param,8) XIC(Meas_No_Response) ]OTE(Alarm2_Active);]]></Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment><![CDATA[Failsafe relay bit like the IM: on when enabled and healthy, off in alarm.]]></Comment>
+<Text><![CDATA[LIM(1,Alarm2_Param,8)XIO(Alarm2_Active)OTE(Alarm2_Relay);]]></Text>
+</Rung>
+</RLLContent>
+</Routine>
+</Routines>
+</Program>
+</Programs>
+</Controller>
+</RSLogix5000Content>

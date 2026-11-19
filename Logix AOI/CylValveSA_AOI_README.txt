@@ -1,0 +1,126 @@
+CylValveSA Add-On Instruction - README
+Revision 1.0  |  Studio 5000 Logix Designer v35  |  Ladder logic only
+======================================================================
+
+PURPOSE
+-------
+Controls a single-acting air cylinder (variant of CylValve): one solenoid extends it, and a
+spring returns it home (retracted) when the solenoid is off.
+Confirms position with two proxes, runs a watchdog timer on each move,
+raises digital alarms on timeout, and records stroke times.
+
+Required = must be assigned a tag when the AOI is placed in ladder.
+Visible  = shown on the instruction block.
+
+
+INPUT PARAMETERS
+----------------
+Cmd_Extend        BOOL  Required
+    Extend request from the main program. Must be HELD ON to keep the
+    cylinder extended. When it turns off, the solenoid drops and the
+    spring returns the cylinder home.
+
+Inp_ProgReset     BOOL  Required
+    Wired to the ProgReset operand of both ALMD alarms. Resets a latched
+    alarm once the fault condition has cleared. Typically tied to a
+    reset pushbutton or an HMI reset bit.
+
+Inp_ExtendedPrx   BOOL  Required
+    Extended-position prox input.
+
+Inp_RetractedPrx  BOOL  Required
+    Retracted-position prox input.
+
+Cfg_ExtendTime    DINT  Optional (hidden)  Default 5000
+    Extend watchdog time in ms. Values of 0 or less are ignored and the
+    5000 ms default is used.
+
+Cfg_RetractTime   DINT  Optional (hidden)  Default 5000
+    Retract watchdog time in ms. Values of 0 or less are ignored and the
+    5000 ms default is used.
+
+
+OUTPUT PARAMETERS
+-----------------
+Out_ExtendSol     BOOL  Required
+    Extend solenoid output. On while Cmd_Extend is held.
+
+Sts_Extended      BOOL  Visible
+    Extended prox on AND retracted prox off.
+
+Sts_Retracted     BOOL  Visible
+    Retracted prox on AND extended prox off.
+
+Sts_ExtendFault   BOOL  Visible
+    Extend watchdog timed out. Clears when the extended prox is made or
+    the extend request drops. (The alarm holds until reset - see below.)
+
+Sts_RetractFault  BOOL  Visible
+    Retract (spring return) watchdog timed out. Clears when the retracted
+    prox is made or Cmd_Extend comes back on.
+
+Sts_ExtendLast    DINT  Visible
+    Time of the most recent extend, in ms.
+
+Sts_ExtendAvg     REAL  Visible
+    Average of the last 5 extend times, in ms. Averages fewer samples
+    until 5 extends have been recorded.
+
+Sts_RetractLast   DINT  Visible
+    Time of the most recent retract, in ms.
+
+Sts_RetractAvg    REAL  Visible
+    Average of the last 5 retract times, in ms.
+
+Sts_Extending     BOOL  Hidden
+    Extend solenoid on, extended position not yet confirmed.
+
+Sts_Retracting    BOOL  Hidden
+    Extend solenoid off (spring returning), retracted position not yet
+    confirmed.
+
+Sts_ProxFault     BOOL  Hidden
+    Both proxes on at the same time (status only, no alarm).
+
+Hidden outputs are read from the instance tag, e.g. MyCyl.Sts_ProxFault
+
+
+INOUT PARAMETERS
+----------------
+InOut parameters pass a reference to a tag you create outside the AOI.
+The AOI reads and writes that tag directly.
+
+Alm_ExtendFail    ALARM_DIGITAL  Required
+    Digital alarm for "cylinder failed to extend within watchdog time".
+    Create an ALARM_DIGITAL tag for each cylinder and assign it here.
+
+Alm_RetractFail   ALARM_DIGITAL  Required
+    Digital alarm for "cylinder failed to retract within watchdog time".
+    Create an ALARM_DIGITAL tag for each cylinder and assign it here.
+
+Alarm tag setup (in each ALARM_DIGITAL tag's properties):
+  - Check LATCHED. Without it, Inp_ProgReset has no effect and the alarm
+    clears as soon as the cylinder reaches position.
+  - Enter the alarm message text and severity on the tag.
+  - If ACKNOWLEDGE REQUIRED is checked, the operator must acknowledge
+    the alarm as well as reset it.
+
+
+INTERNAL (LOCAL) TAGS - for reference while monitoring the AOI logic
+-------------------------------------------------------------------
+ExtendWD / RetractWD            TIMER     Watchdog timers (TON)
+ExtendStroke / RetractStroke    TIMER     Stroke time measurement (RTO)
+ExtendTimes / RetractTimes      DINT[5]   Last 5 times in ms, [0] newest
+ExtendCount / RetractCount      DINT      Samples recorded (0-5)
+ExtendLogged / RetractLogged    BOOL      Seal-in, records each move once
+ExtendSum / RetractSum          REAL      Sum used for the average
+
+
+NOTES
+-----
+- No latch/unlatch instructions and no one-shots are used. One-time
+  recording of each move is done with a seal-in rung.
+- Retract is monitored any time the extend solenoid is off. If the
+  cylinder is not home at power-up, the retract watchdog runs and alarms
+  if it does not reach the retracted prox in time.
+- Times are accurate to the scan/period time of the task the AOI runs in.

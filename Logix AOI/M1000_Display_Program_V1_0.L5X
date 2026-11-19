@@ -1,0 +1,753 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RSLogix5000Content SchemaRevision="1.0" SoftwareRevision="35.01" TargetName="M1000" TargetType="Program" TargetClass="Standard" ContainsContext="true" ExportDate="Tue Nov 03 12:00:00 2026" ExportOptions="References NoRawData L5KData Context Dependencies ForceProtectedEncoding AllProjDocTrans">
+<Controller Use="Context" Name="BenchPLC_Template">
+<DataTypes Use="Context">
+<DataType Name="STRING_200" Family="StringFamily" Class="User">
+<Description><![CDATA[String up to 200 characters (used for wrap-around of sliding text).]]></Description>
+<Members>
+<Member Name="LEN" DataType="DINT" Dimension="0" Radix="Decimal" Hidden="false" ExternalAccess="Read/Write"/>
+<Member Name="DATA" DataType="SINT" Dimension="200" Radix="ASCII" Hidden="false" ExternalAccess="Read/Write"/>
+</Members>
+</DataType>
+</DataTypes>
+<Programs Use="Context">
+<Program Use="Target" Name="M1000" TestEdits="false" MainRoutineName="M1K_DISPATCH" Disabled="false" Class="Standard" UseAsFolder="false">
+<Description><![CDATA[Vorne M1000 serial message display on PLX31-EIP-ASCII4 port 2 (transmit only). Line 1 rotates sensor readings, line 2 cycles active alarms; sliding and blinking done in the PLC, each switchable. V1.0]]></Description>
+<Tags>
+<Tag Name="Display_Enable" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI/Program: send to the display. Off = stop sending (the display keeps the last screen).]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Display_Address" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[M1000 unit address (rotary switches). 0 = no address (switches at 00), 1-99 = address.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Display_Intensity" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Brightness 1 (dim) to 15 (bright).]]></Description>
+<Data Format="L5K"><![CDATA[15]]></Data>
+</Tag>
+<Tag Name="Sensor_Value" TagType="Base" DataType="REAL" Dimensions="8" Radix="Float" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Line 1: sensor values. Write from other programs, e.g. \M1000.Sensor_Value[0].]]></Description>
+<Data Format="L5K"><![CDATA[[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]]]></Data>
+</Tag>
+<Tag Name="Sensor_Label" TagType="Base" DataType="STRING" Dimensions="8" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Line 1: label shown before each value (keep short; line is 20 characters).]]></Description>
+<Data Format="L5K"><![CDATA[[[8,'SENSOR 1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SENSOR 2$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SENSOR 3$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SENSOR 4$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SENSOR 5$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SENSOR 6$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SENSOR 7$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'SENSOR 8$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]]></Data>
+</Tag>
+<Tag Name="Sensor_Units" TagType="Base" DataType="STRING" Dimensions="8" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Line 1: units shown after each value, e.g. F, PSI. Blank = none.]]></Description>
+<Data Format="L5K"><![CDATA[[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]]></Data>
+</Tag>
+<Tag Name="Sensor_Decimals" TagType="Base" DataType="DINT" Dimensions="8" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Line 1: decimal places for each value, 0-3.]]></Description>
+<Data Format="L5K"><![CDATA[[1,1,1,1,1,1,1,1]]]></Data>
+</Tag>
+<Tag Name="Sensor_Enable" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Line 1: one bit per sensor (bit 0 = Sensor_Value[0] ... bit 7). Only enabled sensors are shown.]]></Description>
+<Comments>
+<Comment Operand=".0"><![CDATA[Show sensor 1 (Sensor_Value[0])]]></Comment>
+<Comment Operand=".1"><![CDATA[Show sensor 2 (Sensor_Value[1])]]></Comment>
+<Comment Operand=".2"><![CDATA[Show sensor 3 (Sensor_Value[2])]]></Comment>
+<Comment Operand=".3"><![CDATA[Show sensor 4 (Sensor_Value[3])]]></Comment>
+<Comment Operand=".4"><![CDATA[Show sensor 5 (Sensor_Value[4])]]></Comment>
+<Comment Operand=".5"><![CDATA[Show sensor 6 (Sensor_Value[5])]]></Comment>
+<Comment Operand=".6"><![CDATA[Show sensor 7 (Sensor_Value[6])]]></Comment>
+<Comment Operand=".7"><![CDATA[Show sensor 8 (Sensor_Value[7])]]></Comment>
+</Comments>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Alarm_Text" TagType="Base" DataType="STRING" Dimensions="32" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Line 2: fault message for each alarm bit (up to 60 characters; longer is cut).]]></Description>
+<Data Format="L5K"><![CDATA[[[7,'ALARM 1$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ALARM 2$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ALARM 3$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ALARM 4$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ALARM 5$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ALARM 6$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ALARM 7$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ALARM 8$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[7,'ALARM 9$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 10$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 11$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 12$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 13$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 14$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 15$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 16$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 17$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 18$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 19$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 20$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 21$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 22$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 23$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 24$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 25$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 26$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 27$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 28$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 29$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 30$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 31$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00'],[8,'ALARM 32$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]]></Data>
+</Tag>
+<Tag Name="Alarm_Active" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Line 2: one bit per alarm (bit 0 = Alarm_Text[0] ... bit 31). On = active.]]></Description>
+<Comments>
+<Comment Operand=".0"><![CDATA[Alarm 1 active (Alarm_Text[0])]]></Comment>
+<Comment Operand=".1"><![CDATA[Alarm 2 active (Alarm_Text[1])]]></Comment>
+<Comment Operand=".2"><![CDATA[Alarm 3 active (Alarm_Text[2])]]></Comment>
+<Comment Operand=".3"><![CDATA[Alarm 4 active (Alarm_Text[3])]]></Comment>
+<Comment Operand=".4"><![CDATA[Alarm 5 active (Alarm_Text[4])]]></Comment>
+<Comment Operand=".5"><![CDATA[Alarm 6 active (Alarm_Text[5])]]></Comment>
+<Comment Operand=".6"><![CDATA[Alarm 7 active (Alarm_Text[6])]]></Comment>
+<Comment Operand=".7"><![CDATA[Alarm 8 active (Alarm_Text[7])]]></Comment>
+<Comment Operand=".8"><![CDATA[Alarm 9 active (Alarm_Text[8])]]></Comment>
+<Comment Operand=".9"><![CDATA[Alarm 10 active (Alarm_Text[9])]]></Comment>
+<Comment Operand=".10"><![CDATA[Alarm 11 active (Alarm_Text[10])]]></Comment>
+<Comment Operand=".11"><![CDATA[Alarm 12 active (Alarm_Text[11])]]></Comment>
+<Comment Operand=".12"><![CDATA[Alarm 13 active (Alarm_Text[12])]]></Comment>
+<Comment Operand=".13"><![CDATA[Alarm 14 active (Alarm_Text[13])]]></Comment>
+<Comment Operand=".14"><![CDATA[Alarm 15 active (Alarm_Text[14])]]></Comment>
+<Comment Operand=".15"><![CDATA[Alarm 16 active (Alarm_Text[15])]]></Comment>
+<Comment Operand=".16"><![CDATA[Alarm 17 active (Alarm_Text[16])]]></Comment>
+<Comment Operand=".17"><![CDATA[Alarm 18 active (Alarm_Text[17])]]></Comment>
+<Comment Operand=".18"><![CDATA[Alarm 19 active (Alarm_Text[18])]]></Comment>
+<Comment Operand=".19"><![CDATA[Alarm 20 active (Alarm_Text[19])]]></Comment>
+<Comment Operand=".20"><![CDATA[Alarm 21 active (Alarm_Text[20])]]></Comment>
+<Comment Operand=".21"><![CDATA[Alarm 22 active (Alarm_Text[21])]]></Comment>
+<Comment Operand=".22"><![CDATA[Alarm 23 active (Alarm_Text[22])]]></Comment>
+<Comment Operand=".23"><![CDATA[Alarm 24 active (Alarm_Text[23])]]></Comment>
+<Comment Operand=".24"><![CDATA[Alarm 25 active (Alarm_Text[24])]]></Comment>
+<Comment Operand=".25"><![CDATA[Alarm 26 active (Alarm_Text[25])]]></Comment>
+<Comment Operand=".26"><![CDATA[Alarm 27 active (Alarm_Text[26])]]></Comment>
+<Comment Operand=".27"><![CDATA[Alarm 28 active (Alarm_Text[27])]]></Comment>
+<Comment Operand=".28"><![CDATA[Alarm 29 active (Alarm_Text[28])]]></Comment>
+<Comment Operand=".29"><![CDATA[Alarm 30 active (Alarm_Text[29])]]></Comment>
+<Comment Operand=".30"><![CDATA[Alarm 31 active (Alarm_Text[30])]]></Comment>
+<Comment Operand=".31"><![CDATA[Alarm 32 active (Alarm_Text[31])]]></Comment>
+</Comments>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Line1_Idle_Text" TagType="Base" DataType="STRING" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Line 1 text when no sensor is enabled.]]></Description>
+<Data Format="L5K"><![CDATA[[10,'NO SENSORS$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Line2_Idle_Text" TagType="Base" DataType="STRING" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Line 2 text when no alarm is active.]]></Description>
+<Data Format="L5K"><![CDATA[[16,'NO ACTIVE FAULTS$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Line1_Rotate_En" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: Line 1: rotate through the enabled sensors. Off = stay on the current one.]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Line1_Scroll_En" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: Line 1: slide text longer than 20 characters across the line. Off = cut at 20.]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Line1_Blink_En" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: Line 1: blink the sensor reading.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Line2_Cycle_En" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: Line 2: cycle through all active alarms. Off = stay on the current alarm until it clears.]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Line2_Scroll_En" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: Line 2: slide alarm text longer than 20 characters across the line. Off = cut at 20.]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Line2_Blink_En" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[HMI: Line 2: blink active alarm text (idle text never blinks).]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="L1_Win" TagType="Base" DataType="STRING" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Preview: what line 1 shows right now (20 characters max).]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L2_Win" TagType="Base" DataType="STRING" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Preview: what line 2 shows right now (20 characters max).]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L1_Index" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Sensor shown on line 1 (0-7).]]></Description>
+<Data Format="L5K"><![CDATA[7]]></Data>
+</Tag>
+<Tag Name="L2_Index" TagType="Base" DataType="DINT" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Alarm shown on line 2 (0-31).]]></Description>
+<Data Format="L5K"><![CDATA[31]]></Data>
+</Tag>
+<Tag Name="Comm_Fault" TagType="Base" DataType="BOOL" Radix="Decimal" Usage="Public" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Alarm: last send to the PLX failed. Clears on the next success.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Revision" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Program revision.]]></Description>
+<Data Format="L5K"><![CDATA[[4,'V1.0$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Sensor_Dwell" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[How long each sensor stays on line 1.]]></Description>
+<Data Format="L5K"><![CDATA[[0,3000,0]]]></Data>
+</Tag>
+<Tag Name="Alarm_Dwell" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[How long each alarm stays on line 2 (a long alarm also finishes one full slide).]]></Description>
+<Data Format="L5K"><![CDATA[[0,3000,0]]]></Data>
+</Tag>
+<Tag Name="Scroll_Step_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Slide speed: one character every preset.]]></Description>
+<Data Format="L5K"><![CDATA[[0,300,0]]]></Data>
+</Tag>
+<Tag Name="Blink_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Blink half-period.]]></Description>
+<Data Format="L5K"><![CDATA[[0,500,0]]]></Data>
+</Tag>
+<Tag Name="Refresh_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[How often line 1 values are re-formatted.]]></Description>
+<Data Format="L5K"><![CDATA[[0,1000,0]]]></Data>
+</Tag>
+<Tag Name="Keepalive_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Resend the screen even if nothing changed (restores the display after a power cycle).]]></Description>
+<Data Format="L5K"><![CDATA[[0,5000,0]]]></Data>
+</Tag>
+<Tag Name="Send_Gap_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Minimum gap between messages.]]></Description>
+<Data Format="L5K"><![CDATA[[0,100,0]]]></Data>
+</Tag>
+<Tag Name="Send_Watchdog" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Max time for one MSG.]]></Description>
+<Data Format="L5K"><![CDATA[[0,2000,0]]]></Data>
+</Tag>
+<Tag Name="Retry_Timer" TagType="Base" DataType="TIMER" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Wait after a fault.]]></Description>
+<Data Format="L5K"><![CDATA[[0,2000,0]]]></Data>
+</Tag>
+<Tag Name="Blink_Phase" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 = text shown, 0 = blank (blink off half).]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Str_Space" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - used to build text.]]></Description>
+<Data Format="L5K"><![CDATA[[1,' $00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Gap" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Gap between repeats of sliding text.]]></Description>
+<Data Format="L5K"><![CDATA[[3,'   $00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Zero" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - used to build text.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'0$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Dot" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - used to build text.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'.$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Minus" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - used to build text.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'-$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Stars" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Shown when a value is too big to format.]]></Description>
+<Data Format="L5K"><![CDATA[[4,'****$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_ESC" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Escape character - starts every M1000 command.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'$1B$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Addr_End" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Address command letter.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'A$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Font1" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Font 1: 2 lines x 20 characters.]]></Description>
+<Data Format="L5K"><![CDATA[[3,'$1B1F$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_Int_End" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Intensity command letter.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'I$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_L1Pos" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Cursor to line 1, column 1.]]></Description>
+<Data Format="L5K"><![CDATA[[5,'$1B1;1C$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_L2Pos" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Cursor to line 2, column 1.]]></Description>
+<Data Format="L5K"><![CDATA[[5,'$1B2;1C$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Str_CR" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - Ends a message.]]></Description>
+<Data Format="L5K"><![CDATA[[1,'$0D$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Dec_Factor" TagType="Base" DataType="REAL" Dimensions="4" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[CONSTANT - 10 to the power of decimals.]]></Description>
+<Data Format="L5K"><![CDATA[[1.0,10.0,100.0,1000.0]]]></Data>
+</Tag>
+<Tag Name="L1_State" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[0 = nothing to show (idle text), 1 = showing an item.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L1_Searching" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 = looking for the next item.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L1_Cand" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Item being checked by the search.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L1_Tries" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Items checked so far in this search.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L1_Reset" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 = a new item was picked this scan (restart slide, rebuild text).]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="L1_Raw" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Text before cutting to 60 characters.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L1_Text" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Full text for the line (max 60).]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L1_Src" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Text + gap, for sliding.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L1_Src2" TagType="Base" DataType="STRING_200" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Text + gap twice, so a 20-character window can wrap around.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L1_Pos" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Slide position (first character shown).]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="L1_Passes" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Full slides completed for the current item.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L1_Marquee" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Sliding is active (enabled and text longer than 20).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L2_State" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[0 = nothing to show (idle text), 1 = showing an item.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L2_Searching" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 = looking for the next item.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L2_Cand" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Item being checked by the search.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L2_Tries" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Items checked so far in this search.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L2_Reset" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 = a new item was picked this scan (restart slide, rebuild text).]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="L2_Raw" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Text before cutting to 60 characters.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L2_Text" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Full text for the line (max 60).]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L2_Src" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Text + gap, for sliding.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L2_Src2" TagType="Base" DataType="STRING_200" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Text + gap twice, so a 20-character window can wrap around.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="L2_Pos" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Slide position (first character shown).]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="L2_Passes" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Full slides completed for the current item.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L2_Marquee" TagType="Base" DataType="BOOL" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Sliding is active (enabled and text longer than 20).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="L1_En_Mask" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Sensor_Enable bits 0-7 only.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fmt_Idx" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fmt_Dec" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Fmt_Fac" TagType="Base" DataType="REAL" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[10.0]]></Data>
+</Tag>
+<Tag Name="Fmt_Scaled_R" TagType="Base" DataType="REAL" Radix="Float" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0.0]]></Data>
+</Tag>
+<Tag Name="Fmt_Scaled" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fmt_Neg" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fmt_Qty" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fmt_Start" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fmt_Bad" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fmt_Busy" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 while the reading is being formatted (all in one scan).]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Fmt_Num" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Formatted number.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Fmt_Left" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Fmt_Right" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Fmt_Lbl" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Label cut to 30.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Fmt_Unit" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Units cut to 10.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="W1" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Scratch.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="W2" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Scratch.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="W3" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Scratch.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="W4" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Scratch.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Addr_Str" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Int_Str" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Int_Val" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[15]]></Data>
+</Tag>
+<Tag Name="Msg_Prefix" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Address + font + intensity commands.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Msg" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Complete message for the display (built every scan).]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Msg_Last" TagType="Base" DataType="STRING" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Last message sent. A new one is sent only when Msg differs or the keepalive is due.]]></Description>
+<Data Format="L5K"><![CDATA[[0,'$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00$00']]]></Data>
+</Tag>
+<Tag Name="Comm_Step" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[0 idle, 10 sending, 30 gap, 90 fault wait.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Tx_Seq" TagType="Base" DataType="SINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[PLX transmit sequence number, 1-100.]]></Description>
+<Data Format="L5K"><![CDATA[1]]></Data>
+</Tag>
+<Tag Name="Tx_Buf" TagType="Base" DataType="SINT" Dimensions="80" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[PLX port 2 transmit block: [0..1] sequence, [6..7] length, [8..] text.]]></Description>
+<Data Format="L5K"><![CDATA[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]]></Data>
+</Tag>
+<Tag Name="Tx_MSG" TagType="Base" DataType="MESSAGE" ExternalAccess="Read/Write">
+<Description><![CDATA[The ONLY MSG. Writes Tx_Buf to PLX port 2 transmit block (SintData[4400] = Tx DB Start 2200).]]></Description>
+<Data Format="Message"><MessageParameters MessageType="CIP Data Table Write" RemoteElement="SintData[4400]" RequestedLength="80" ConnectedFlag="2" ConnectionPath="Prosoft_Pyro" CommTypeCode="0" LocalIndex="0" LocalElement="Tx_Buf[0]"/></Data>
+</Tag>
+<Tag Name="Sent_Count" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[Diagnostic: messages sent.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Err_Source" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[1 MSG error, 3 MSG timeout, 5 message too long.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Err_Code" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[MSG .ERR.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Err_ExCode" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Description><![CDATA[MSG .EXERR.]]></Description>
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+<Tag Name="Comm_Fault_Count" TagType="Base" DataType="DINT" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
+<Data Format="L5K"><![CDATA[0]]></Data>
+</Tag>
+</Tags>
+<Routines>
+<Routine Name="M1K_DISPATCH" Type="RLL">
+<Description><![CDATA[Main routine. Vorne M1000 two-line display on PLX31-EIP-ASCII4 port 2 (transmit only). Line 1 rotates sensor readings, line 2 cycles active alarms. Sliding and blinking are done by the PLC so the 1 s refresh never interrupts them.]]></Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment><![CDATA[First scan: start every line and the sender from idle.]]></Comment>
+<Text><![CDATA[XIC(S:FS)[MOV(0,Comm_Step) ,MOV(0,L1_State) ,MOV(0,L2_State) ,MOV(0,L1_Searching) ,MOV(0,L2_Searching) ,MOV(1,L1_Reset) ,MOV(1,L2_Reset) ,MOV(0,Msg_Last.LEN) ];]]></Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment><![CDATA[Shared pulse timers. Each is self-resetting, so .DN is on for exactly one scan per period (no ONS).]]></Comment>
+<Text><![CDATA[XIO(Scroll_Step_Timer.DN)TON(Scroll_Step_Timer,?,?);]]></Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Text><![CDATA[XIO(Refresh_Timer.DN)TON(Refresh_Timer,?,?);]]></Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Text><![CDATA[XIO(Blink_Timer.DN)TON(Blink_Timer,?,?);]]></Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment><![CDATA[Blink: flip Blink_Phase between 1 (show) and 0 (blank) every Blink_Timer preset.]]></Comment>
+<Text><![CDATA[XIC(Blink_Timer.DN)XOR(Blink_Phase,1,Blink_Phase);]]></Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment><![CDATA[1) Line 1 - sensor readings.]]></Comment>
+<Text><![CDATA[JSR(M1K_Line1,0);]]></Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Comment><![CDATA[2) Line 2 - active alarms.]]></Comment>
+<Text><![CDATA[JSR(M1K_Line2,0);]]></Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Comment><![CDATA[3) Build the message and send it when it changes.]]></Comment>
+<Text><![CDATA[JSR(M1K_Comm,0);]]></Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="M1K_Line1" Type="RLL">
+<Description><![CDATA[Line 1: rotates through the enabled sensors (Sensor_Enable bits), formats label + value + units, slides long text and blinks if enabled.]]></Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment><![CDATA[Only bits 0-7 of Sensor_Enable are sensors.]]></Comment>
+<Text><![CDATA[AND(Sensor_Enable,255,L1_En_Mask);]]></Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment><![CDATA[START A SEARCH for the next item when: the item shown has been switched off, nothing is shown but something is now available, or the dwell time is up (and a sliding text has finished one pass). Index range is checked first so the indirect bit can't fault.]]></Comment>
+<Text><![CDATA[EQU(L1_Searching,0)[EQU(L1_State,1) LIM(0,L1_Index,7) XIO(Sensor_Enable.[L1_Index]) ,EQU(L1_State,0) NEQ(L1_En_Mask,0) ,EQU(L1_State,1) XIC(Sensor_Dwell.DN) XIC(Line1_Rotate_En) [XIO(L1_Marquee) ,GEQ(L1_Passes,1) ] ,EQU(L1_State,1) [LES(L1_Index,0) ,GRT(L1_Index,7) ] ][MOV(1,L1_Searching) ,LIM(0,L1_Index,7) MOV(L1_Index,L1_Cand) ,[LES(L1_Index,0) ,GRT(L1_Index,7) ] MOV(7,L1_Cand) ,MOV(0,L1_Tries) ,RES(Sensor_Dwell) ];]]></Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment><![CDATA[SEARCH: check the next item; 8 rungs per scan, so all 8 are checked within 1 scan(s). Found -> show it. All checked and none on -> idle text.]]></Comment>
+<Text><![CDATA[EQU(L1_Searching,1)[ADD(L1_Cand,1,L1_Cand) ,GEQ(L1_Cand,8) MOV(0,L1_Cand) ,ADD(L1_Tries,1,L1_Tries) ,XIC(Sensor_Enable.[L1_Cand]) MOV(L1_Cand,L1_Index) MOV(1,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ,GEQ(L1_Tries,8) EQU(L1_Searching,1) MOV(0,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ];]]></Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Text><![CDATA[EQU(L1_Searching,1)[ADD(L1_Cand,1,L1_Cand) ,GEQ(L1_Cand,8) MOV(0,L1_Cand) ,ADD(L1_Tries,1,L1_Tries) ,XIC(Sensor_Enable.[L1_Cand]) MOV(L1_Cand,L1_Index) MOV(1,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ,GEQ(L1_Tries,8) EQU(L1_Searching,1) MOV(0,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ];]]></Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Text><![CDATA[EQU(L1_Searching,1)[ADD(L1_Cand,1,L1_Cand) ,GEQ(L1_Cand,8) MOV(0,L1_Cand) ,ADD(L1_Tries,1,L1_Tries) ,XIC(Sensor_Enable.[L1_Cand]) MOV(L1_Cand,L1_Index) MOV(1,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ,GEQ(L1_Tries,8) EQU(L1_Searching,1) MOV(0,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ];]]></Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Text><![CDATA[EQU(L1_Searching,1)[ADD(L1_Cand,1,L1_Cand) ,GEQ(L1_Cand,8) MOV(0,L1_Cand) ,ADD(L1_Tries,1,L1_Tries) ,XIC(Sensor_Enable.[L1_Cand]) MOV(L1_Cand,L1_Index) MOV(1,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ,GEQ(L1_Tries,8) EQU(L1_Searching,1) MOV(0,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ];]]></Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Text><![CDATA[EQU(L1_Searching,1)[ADD(L1_Cand,1,L1_Cand) ,GEQ(L1_Cand,8) MOV(0,L1_Cand) ,ADD(L1_Tries,1,L1_Tries) ,XIC(Sensor_Enable.[L1_Cand]) MOV(L1_Cand,L1_Index) MOV(1,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ,GEQ(L1_Tries,8) EQU(L1_Searching,1) MOV(0,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ];]]></Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Text><![CDATA[EQU(L1_Searching,1)[ADD(L1_Cand,1,L1_Cand) ,GEQ(L1_Cand,8) MOV(0,L1_Cand) ,ADD(L1_Tries,1,L1_Tries) ,XIC(Sensor_Enable.[L1_Cand]) MOV(L1_Cand,L1_Index) MOV(1,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ,GEQ(L1_Tries,8) EQU(L1_Searching,1) MOV(0,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ];]]></Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Text><![CDATA[EQU(L1_Searching,1)[ADD(L1_Cand,1,L1_Cand) ,GEQ(L1_Cand,8) MOV(0,L1_Cand) ,ADD(L1_Tries,1,L1_Tries) ,XIC(Sensor_Enable.[L1_Cand]) MOV(L1_Cand,L1_Index) MOV(1,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ,GEQ(L1_Tries,8) EQU(L1_Searching,1) MOV(0,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ];]]></Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Text><![CDATA[EQU(L1_Searching,1)[ADD(L1_Cand,1,L1_Cand) ,GEQ(L1_Cand,8) MOV(0,L1_Cand) ,ADD(L1_Tries,1,L1_Tries) ,XIC(Sensor_Enable.[L1_Cand]) MOV(L1_Cand,L1_Index) MOV(1,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ,GEQ(L1_Tries,8) EQU(L1_Searching,1) MOV(0,L1_State) MOV(0,L1_Searching) MOV(1,L1_Reset) ];]]></Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Comment><![CDATA[DWELL: time the item on screen.]]></Comment>
+<Text><![CDATA[EQU(L1_State,1)TON(Sensor_Dwell,?,?);]]></Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Comment><![CDATA[FORMAT THE SENSOR READING (on a new sensor or every Refresh_Timer): label + value + units. Step 1: decimals 0-3 and scale factor.]]></Comment>
+<Text><![CDATA[EQU(L1_State,1)[EQU(L1_Reset,1) ,XIC(Refresh_Timer.DN) ]LIM(0,L1_Index,7)[MOV(L1_Index,Fmt_Idx) ,MOV(Sensor_Decimals[L1_Index],Fmt_Dec) ,LES(Fmt_Dec,0) MOV(0,Fmt_Dec) ,GRT(Fmt_Dec,3) MOV(3,Fmt_Dec) ,MOV(Dec_Factor[Fmt_Dec],Fmt_Fac) ,MUL(Sensor_Value[L1_Index],Fmt_Fac,Fmt_Scaled_R) ,MOV(0,Fmt_Neg) ,LES(Fmt_Scaled_R,0.0) MOV(1,Fmt_Neg) ABS(Fmt_Scaled_R,Fmt_Scaled_R) ,MOV(0,Fmt_Bad) ,GRT(Fmt_Scaled_R,2000000000.0) MOV(1,Fmt_Bad) ,LEQ(Fmt_Scaled_R,2000000000.0) MOV(Fmt_Scaled_R,Fmt_Scaled) DTOS(Fmt_Scaled,Fmt_Num) EQU(Fmt_Scaled,0) MOV(0,Fmt_Neg) ,MOV(1,Fmt_Busy) ];]]></Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Comment><![CDATA[Step 2: add leading zeros so there is at least one digit before the decimal point (5 with 2 decimals -> 005 -> 0.05). Up to three, one per branch.]]></Comment>
+<Text><![CDATA[EQU(Fmt_Busy,1)EQU(Fmt_Bad,0)GRT(Fmt_Dec,0)[LEQ(Fmt_Num.LEN,Fmt_Dec) CONCAT(Str_Zero,Fmt_Num,W1) COP(W1,Fmt_Num,1) ,LEQ(Fmt_Num.LEN,Fmt_Dec) CONCAT(Str_Zero,Fmt_Num,W1) COP(W1,Fmt_Num,1) ,LEQ(Fmt_Num.LEN,Fmt_Dec) CONCAT(Str_Zero,Fmt_Num,W1) COP(W1,Fmt_Num,1) ];]]></Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Comment><![CDATA[Step 3: put the decimal point in: left part + '.' + last Fmt_Dec digits.]]></Comment>
+<Text><![CDATA[EQU(Fmt_Busy,1)EQU(Fmt_Bad,0)GRT(Fmt_Dec,0)GRT(Fmt_Num.LEN,Fmt_Dec)[SUB(Fmt_Num.LEN,Fmt_Dec,Fmt_Qty) ,MID(Fmt_Num,Fmt_Qty,1,Fmt_Left) ,ADD(Fmt_Qty,1,Fmt_Start) ,MID(Fmt_Num,Fmt_Dec,Fmt_Start,Fmt_Right) ,CONCAT(Fmt_Left,Str_Dot,W1) ,CONCAT(W1,Fmt_Right,Fmt_Num) ];]]></Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment><![CDATA[Step 4: minus sign; '****' if the value is too big.]]></Comment>
+<Text><![CDATA[EQU(Fmt_Busy,1)[EQU(Fmt_Bad,0) EQU(Fmt_Neg,1) CONCAT(Str_Minus,Fmt_Num,W1) COP(W1,Fmt_Num,1) ,EQU(Fmt_Bad,1) COP(Str_Stars,Fmt_Num,1) ];]]></Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Comment><![CDATA[Step 5: label (max 30) + space + number + space + units (max 10, left out when blank).]]></Comment>
+<Text><![CDATA[EQU(Fmt_Busy,1)LIM(0,Fmt_Idx,7)[GRT(Sensor_Label[Fmt_Idx].LEN,30) MID(Sensor_Label[Fmt_Idx],30,1,Fmt_Lbl) ,LEQ(Sensor_Label[Fmt_Idx].LEN,30) COP(Sensor_Label[Fmt_Idx],Fmt_Lbl,1) ,GRT(Sensor_Units[Fmt_Idx].LEN,10) MID(Sensor_Units[Fmt_Idx],10,1,Fmt_Unit) ,LEQ(Sensor_Units[Fmt_Idx].LEN,10) COP(Sensor_Units[Fmt_Idx],Fmt_Unit,1) ,CONCAT(Fmt_Lbl,Str_Space,W1) ,CONCAT(W1,Fmt_Num,L1_Raw) ,GRT(Fmt_Unit.LEN,0) CONCAT(L1_Raw,Str_Space,W2) CONCAT(W2,Fmt_Unit,L1_Raw) ,MOV(0,Fmt_Busy) ];]]></Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Comment><![CDATA[Nothing to show -> idle text.]]></Comment>
+<Text><![CDATA[EQU(L1_State,0)[EQU(L1_Reset,1) ,XIC(Refresh_Timer.DN) ]COP(Line1_Idle_Text,L1_Raw,1);]]></Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Comment><![CDATA[Cut to 60 characters.]]></Comment>
+<Text><![CDATA[[GRT(L1_Raw.LEN,60) MID(L1_Raw,60,1,L1_Text) ,LEQ(L1_Raw.LEN,60) COP(L1_Raw,L1_Text,1) ];]]></Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Comment><![CDATA[SLIDE (marquee) only when enabled and the text is longer than the 20-character line.]]></Comment>
+<Text><![CDATA[XIC(Line1_Scroll_En)GRT(L1_Text.LEN,20)OTE(L1_Marquee);]]></Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment><![CDATA[Sliding source: text + 3 spaces, then that twice so a 20-character window can wrap around the end.]]></Comment>
+<Text><![CDATA[XIC(L1_Marquee)[CONCAT(L1_Text,Str_Gap,L1_Src) ,CONCAT(L1_Src,L1_Src,L1_Src2) ];]]></Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Comment><![CDATA[New item: start sliding from the first character.]]></Comment>
+<Text><![CDATA[EQU(L1_Reset,1)[MOV(1,L1_Pos) ,MOV(0,L1_Passes) ];]]></Text>
+</Rung>
+<Rung Number="21" Type="N">
+<Comment><![CDATA[Move one character every Scroll_Step_Timer preset. Back at the start = one full pass.]]></Comment>
+<Text><![CDATA[XIC(L1_Marquee)XIC(Scroll_Step_Timer.DN)[ADD(L1_Pos,1,L1_Pos) ,GRT(L1_Pos,L1_Src.LEN) MOV(1,L1_Pos) ADD(L1_Passes,1,L1_Passes) ];]]></Text>
+</Rung>
+<Rung Number="22" Type="N">
+<Comment><![CDATA[Keep the position valid if the text got shorter (a value changed).]]></Comment>
+<Text><![CDATA[XIC(L1_Marquee)[LES(L1_Pos,1) ,GRT(L1_Pos,L1_Src.LEN) ]MOV(1,L1_Pos);]]></Text>
+</Rung>
+<Rung Number="23" Type="N">
+<Text><![CDATA[MOV(0,L1_Reset);]]></Text>
+</Rung>
+<Rung Number="24" Type="N">
+<Comment><![CDATA[WINDOW = the 20 characters shown. Sliding: 20 characters from the slide position. Not sliding: the first 20 characters.]]></Comment>
+<Text><![CDATA[[XIC(L1_Marquee) LIM(1,L1_Pos,L1_Src.LEN) MID(L1_Src2,20,L1_Pos,L1_Win) ,XIO(L1_Marquee) GRT(L1_Text.LEN,20) MID(L1_Text,20,1,L1_Win) ,XIO(L1_Marquee) LEQ(L1_Text.LEN,20) COP(L1_Text,L1_Win,1) ];]]></Text>
+</Rung>
+<Rung Number="25" Type="N">
+<Comment><![CDATA[BLINK: blank the line during the off half of the blink (only when an item is shown).]]></Comment>
+<Text><![CDATA[XIC(Line1_Blink_En)EQU(L1_State,1)EQU(Blink_Phase,0)MOV(0,L1_Win.LEN);]]></Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="M1K_Line2" Type="RLL">
+<Description><![CDATA[Line 2: cycles through the active alarms (Alarm_Active bits), slides long alarm text and blinks if enabled.]]></Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment><![CDATA[START A SEARCH for the next item when: the item shown has been switched off, nothing is shown but something is now available, or the dwell time is up (and a sliding text has finished one pass). Index range is checked first so the indirect bit can't fault.]]></Comment>
+<Text><![CDATA[EQU(L2_Searching,0)[EQU(L2_State,1) LIM(0,L2_Index,31) XIO(Alarm_Active.[L2_Index]) ,EQU(L2_State,0) NEQ(Alarm_Active,0) ,EQU(L2_State,1) XIC(Alarm_Dwell.DN) XIC(Line2_Cycle_En) [XIO(L2_Marquee) ,GEQ(L2_Passes,1) ] ,EQU(L2_State,1) [LES(L2_Index,0) ,GRT(L2_Index,31) ] ][MOV(1,L2_Searching) ,LIM(0,L2_Index,31) MOV(L2_Index,L2_Cand) ,[LES(L2_Index,0) ,GRT(L2_Index,31) ] MOV(31,L2_Cand) ,MOV(0,L2_Tries) ,RES(Alarm_Dwell) ];]]></Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment><![CDATA[SEARCH: check the next item; 8 rungs per scan, so all 32 are checked within 4 scan(s). Found -> show it. All checked and none on -> idle text.]]></Comment>
+<Text><![CDATA[EQU(L2_Searching,1)[ADD(L2_Cand,1,L2_Cand) ,GEQ(L2_Cand,32) MOV(0,L2_Cand) ,ADD(L2_Tries,1,L2_Tries) ,XIC(Alarm_Active.[L2_Cand]) MOV(L2_Cand,L2_Index) MOV(1,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ,GEQ(L2_Tries,32) EQU(L2_Searching,1) MOV(0,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ];]]></Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Text><![CDATA[EQU(L2_Searching,1)[ADD(L2_Cand,1,L2_Cand) ,GEQ(L2_Cand,32) MOV(0,L2_Cand) ,ADD(L2_Tries,1,L2_Tries) ,XIC(Alarm_Active.[L2_Cand]) MOV(L2_Cand,L2_Index) MOV(1,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ,GEQ(L2_Tries,32) EQU(L2_Searching,1) MOV(0,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ];]]></Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Text><![CDATA[EQU(L2_Searching,1)[ADD(L2_Cand,1,L2_Cand) ,GEQ(L2_Cand,32) MOV(0,L2_Cand) ,ADD(L2_Tries,1,L2_Tries) ,XIC(Alarm_Active.[L2_Cand]) MOV(L2_Cand,L2_Index) MOV(1,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ,GEQ(L2_Tries,32) EQU(L2_Searching,1) MOV(0,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ];]]></Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Text><![CDATA[EQU(L2_Searching,1)[ADD(L2_Cand,1,L2_Cand) ,GEQ(L2_Cand,32) MOV(0,L2_Cand) ,ADD(L2_Tries,1,L2_Tries) ,XIC(Alarm_Active.[L2_Cand]) MOV(L2_Cand,L2_Index) MOV(1,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ,GEQ(L2_Tries,32) EQU(L2_Searching,1) MOV(0,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ];]]></Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Text><![CDATA[EQU(L2_Searching,1)[ADD(L2_Cand,1,L2_Cand) ,GEQ(L2_Cand,32) MOV(0,L2_Cand) ,ADD(L2_Tries,1,L2_Tries) ,XIC(Alarm_Active.[L2_Cand]) MOV(L2_Cand,L2_Index) MOV(1,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ,GEQ(L2_Tries,32) EQU(L2_Searching,1) MOV(0,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ];]]></Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Text><![CDATA[EQU(L2_Searching,1)[ADD(L2_Cand,1,L2_Cand) ,GEQ(L2_Cand,32) MOV(0,L2_Cand) ,ADD(L2_Tries,1,L2_Tries) ,XIC(Alarm_Active.[L2_Cand]) MOV(L2_Cand,L2_Index) MOV(1,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ,GEQ(L2_Tries,32) EQU(L2_Searching,1) MOV(0,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ];]]></Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Text><![CDATA[EQU(L2_Searching,1)[ADD(L2_Cand,1,L2_Cand) ,GEQ(L2_Cand,32) MOV(0,L2_Cand) ,ADD(L2_Tries,1,L2_Tries) ,XIC(Alarm_Active.[L2_Cand]) MOV(L2_Cand,L2_Index) MOV(1,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ,GEQ(L2_Tries,32) EQU(L2_Searching,1) MOV(0,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ];]]></Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Text><![CDATA[EQU(L2_Searching,1)[ADD(L2_Cand,1,L2_Cand) ,GEQ(L2_Cand,32) MOV(0,L2_Cand) ,ADD(L2_Tries,1,L2_Tries) ,XIC(Alarm_Active.[L2_Cand]) MOV(L2_Cand,L2_Index) MOV(1,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ,GEQ(L2_Tries,32) EQU(L2_Searching,1) MOV(0,L2_State) MOV(0,L2_Searching) MOV(1,L2_Reset) ];]]></Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Comment><![CDATA[DWELL: time the item on screen.]]></Comment>
+<Text><![CDATA[EQU(L2_State,1)TON(Alarm_Dwell,?,?);]]></Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Comment><![CDATA[ALARM TEXT for the alarm being shown (on a new alarm or every Refresh_Timer, so edited text shows up).]]></Comment>
+<Text><![CDATA[EQU(L2_State,1)[EQU(L2_Reset,1) ,XIC(Refresh_Timer.DN) ]LIM(0,L2_Index,31)COP(Alarm_Text[L2_Index],L2_Raw,1);]]></Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Comment><![CDATA[Nothing to show -> idle text.]]></Comment>
+<Text><![CDATA[EQU(L2_State,0)[EQU(L2_Reset,1) ,XIC(Refresh_Timer.DN) ]COP(Line2_Idle_Text,L2_Raw,1);]]></Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Comment><![CDATA[Cut to 60 characters.]]></Comment>
+<Text><![CDATA[[GRT(L2_Raw.LEN,60) MID(L2_Raw,60,1,L2_Text) ,LEQ(L2_Raw.LEN,60) COP(L2_Raw,L2_Text,1) ];]]></Text>
+</Rung>
+<Rung Number="13" Type="N">
+<Comment><![CDATA[SLIDE (marquee) only when enabled and the text is longer than the 20-character line.]]></Comment>
+<Text><![CDATA[XIC(Line2_Scroll_En)GRT(L2_Text.LEN,20)OTE(L2_Marquee);]]></Text>
+</Rung>
+<Rung Number="14" Type="N">
+<Comment><![CDATA[Sliding source: text + 3 spaces, then that twice so a 20-character window can wrap around the end.]]></Comment>
+<Text><![CDATA[XIC(L2_Marquee)[CONCAT(L2_Text,Str_Gap,L2_Src) ,CONCAT(L2_Src,L2_Src,L2_Src2) ];]]></Text>
+</Rung>
+<Rung Number="15" Type="N">
+<Comment><![CDATA[New item: start sliding from the first character.]]></Comment>
+<Text><![CDATA[EQU(L2_Reset,1)[MOV(1,L2_Pos) ,MOV(0,L2_Passes) ];]]></Text>
+</Rung>
+<Rung Number="16" Type="N">
+<Comment><![CDATA[Move one character every Scroll_Step_Timer preset. Back at the start = one full pass.]]></Comment>
+<Text><![CDATA[XIC(L2_Marquee)XIC(Scroll_Step_Timer.DN)[ADD(L2_Pos,1,L2_Pos) ,GRT(L2_Pos,L2_Src.LEN) MOV(1,L2_Pos) ADD(L2_Passes,1,L2_Passes) ];]]></Text>
+</Rung>
+<Rung Number="17" Type="N">
+<Comment><![CDATA[Keep the position valid if the text got shorter (a value changed).]]></Comment>
+<Text><![CDATA[XIC(L2_Marquee)[LES(L2_Pos,1) ,GRT(L2_Pos,L2_Src.LEN) ]MOV(1,L2_Pos);]]></Text>
+</Rung>
+<Rung Number="18" Type="N">
+<Text><![CDATA[MOV(0,L2_Reset);]]></Text>
+</Rung>
+<Rung Number="19" Type="N">
+<Comment><![CDATA[WINDOW = the 20 characters shown. Sliding: 20 characters from the slide position. Not sliding: the first 20 characters.]]></Comment>
+<Text><![CDATA[[XIC(L2_Marquee) LIM(1,L2_Pos,L2_Src.LEN) MID(L2_Src2,20,L2_Pos,L2_Win) ,XIO(L2_Marquee) GRT(L2_Text.LEN,20) MID(L2_Text,20,1,L2_Win) ,XIO(L2_Marquee) LEQ(L2_Text.LEN,20) COP(L2_Text,L2_Win,1) ];]]></Text>
+</Rung>
+<Rung Number="20" Type="N">
+<Comment><![CDATA[BLINK: blank the line during the off half of the blink (only when an item is shown).]]></Comment>
+<Text><![CDATA[XIC(Line2_Blink_En)EQU(L2_State,1)EQU(Blink_Phase,0)MOV(0,L2_Win.LEN);]]></Text>
+</Rung>
+</RLLContent>
+</Routine>
+<Routine Name="M1K_Comm" Type="RLL">
+<Description><![CDATA[Builds the full-screen message and sends it through PLX port 2 when it changes. The M1000 never replies, so a send is complete when the MSG is done.]]></Description>
+<RLLContent>
+<Rung Number="0" Type="N">
+<Comment><![CDATA[PREFIX (every Refresh_Timer and on the first scan): address if used, font 1 (2 x 20), intensity.]]></Comment>
+<Text><![CDATA[[XIC(Refresh_Timer.DN) ,XIC(S:FS) ][MOV(0,Msg_Prefix.LEN) ,LIM(1,Display_Address,99) DTOS(Display_Address,Addr_Str) LES(Display_Address,10) CONCAT(Str_Zero,Addr_Str,W1) COP(W1,Addr_Str,1) ,LIM(1,Display_Address,99) CONCAT(Str_ESC,Addr_Str,W1) CONCAT(W1,Str_Addr_End,Msg_Prefix) ,CONCAT(Msg_Prefix,Str_Font1,W1) ,MOV(Display_Intensity,Int_Val) ,LES(Int_Val,1) MOV(1,Int_Val) ,GRT(Int_Val,15) MOV(15,Int_Val) ,DTOS(Int_Val,Int_Str) ,CONCAT(W1,Str_ESC,W2) ,CONCAT(W2,Int_Str,W3) ,CONCAT(W3,Str_Int_End,Msg_Prefix) ];]]></Text>
+</Rung>
+<Rung Number="1" Type="N">
+<Comment><![CDATA[MESSAGE every scan: prefix + cursor line 1 + line 1 text + cursor line 2 + line 2 text + CR. The display clears and redraws on each message.]]></Comment>
+<Text><![CDATA[[CONCAT(Msg_Prefix,Str_L1Pos,W1) ,CONCAT(W1,L1_Win,W2) ,CONCAT(W2,Str_L2Pos,W3) ,CONCAT(W3,L2_Win,W4) ,CONCAT(W4,Str_CR,Msg) ];]]></Text>
+</Rung>
+<Rung Number="2" Type="N">
+<Comment><![CDATA[Keepalive pulse: resend every 5 s even if nothing changed.]]></Comment>
+<Text><![CDATA[XIO(Keepalive_Timer.DN)TON(Keepalive_Timer,?,?);]]></Text>
+</Rung>
+<Rung Number="3" Type="N">
+<Comment><![CDATA[STEP 0 - SEND when enabled and the message changed (or keepalive). Fill the PLX block: new sequence number (the PLX transmits when it changes), length, text.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,0)XIC(Display_Enable)[NEQ(Msg,Msg_Last) ,XIC(Keepalive_Timer.DN) ]LIM(1,Msg.LEN,70)[COP(Msg,Msg_Last,1) ,ADD(Tx_Seq,1,Tx_Seq) ,GRT(Tx_Seq,100) MOV(1,Tx_Seq) ,MOV(Tx_Seq,Tx_Buf[0]) ,MOV(0,Tx_Buf[1]) ,MOV(Msg.LEN,Tx_Buf[6]) ,MOV(0,Tx_Buf[7]) ,COP(Msg.DATA[0],Tx_Buf[8],Msg.LEN) ,MOV(10,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="4" Type="N">
+<Comment><![CDATA[Message too long (should never happen).]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,0)XIC(Display_Enable)GRT(Msg.LEN,70)[MOV(5,Comm_Err_Source) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(90,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="5" Type="N">
+<Comment><![CDATA[STEP 10 - the only MSG instruction.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,10)MSG(Tx_MSG);]]></Text>
+</Rung>
+<Rung Number="6" Type="N">
+<Comment><![CDATA[Done -> gap. EN is checked with DN because DN stays on after the rung goes false.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,10)XIC(Tx_MSG.EN)XIC(Tx_MSG.DN)[ADD(Sent_Count,1,Sent_Count) ,MOV(30,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="7" Type="N">
+<Comment><![CDATA[MSG error -> fault. Msg_Last is cleared so the screen is sent again after the retry.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,10)XIC(Tx_MSG.ER)[MOV(1,Comm_Err_Source) ,MOV(Tx_MSG.ERR,Comm_Err_Code) ,MOV(Tx_MSG.EXERR,Comm_Err_ExCode) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(0,Msg_Last.LEN) ,MOV(90,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="8" Type="N">
+<Comment><![CDATA[Watchdog on the MSG.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,10)TON(Send_Watchdog,?,?);]]></Text>
+</Rung>
+<Rung Number="9" Type="N">
+<Text><![CDATA[XIC(Send_Watchdog.DN)[MOV(3,Comm_Err_Source) ,ADD(Comm_Fault_Count,1,Comm_Fault_Count) ,MOV(0,Msg_Last.LEN) ,MOV(90,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="10" Type="N">
+<Comment><![CDATA[STEP 30 - gap between messages.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,30)[TON(Send_Gap_Timer,?,?) ,XIC(Send_Gap_Timer.DN) MOV(0,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="11" Type="N">
+<Comment><![CDATA[STEP 90 - fault wait, then try again.]]></Comment>
+<Text><![CDATA[EQU(Comm_Step,90)[TON(Retry_Timer,?,?) ,XIC(Retry_Timer.DN) MOV(0,Comm_Step) ];]]></Text>
+</Rung>
+<Rung Number="12" Type="N">
+<Comment><![CDATA[Comm fault alarm: on at step 90 until a send succeeds (seal-in).]]></Comment>
+<Text><![CDATA[[EQU(Comm_Step,90) ,XIC(Comm_Fault) NEQ(Comm_Step,30) ]OTE(Comm_Fault);]]></Text>
+</Rung>
+</RLLContent>
+</Routine>
+</Routines>
+</Program>
+</Programs>
+</Controller>
+</RSLogix5000Content>
